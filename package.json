@@ -1,0 +1,32 @@
+{
+  "name": "rdfa-template",
+  "description": "Fill HTML documents with RDF data",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "rdfa"
+  ],
+  "author": "Austin Wright",
+  "license": "Unlicense",
+  "dependencies": {
+    "rdfa": "^0.0.4",
+    "xmldom": "^0.1.27"
+  },
+  "devDependencies": {
+    "mocha": "^5.1.1"
+  },
+  "bin": {},
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/awwright/node-rdfa-template.git"
+  },
+  "bugs": {
+    "url": "https://github.com/awwright/node-rdfa-template/issues"
+  },
+  "homepage": "https://github.com/awwright/node-rdfa-template#readme"
+}
