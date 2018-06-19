@@ -12,6 +12,8 @@ var evaluateQuery = require('../lib/query.js').evaluateQuery;
 var XMLSerializer = require('xmldom').XMLSerializer;
 var DOMParser = require('xmldom').DOMParser;
 
+var baseIRI = process.argv[4] || 'http://example.com/';
+
 var templateFilename = process.argv[2];
 var templateContents = fs.readFileSync(templateFilename, 'UTF-8');
 var XMLSerializer = new XMLSerializer;
@@ -19,7 +21,7 @@ var document = new DOMParser().parseFromString(templateContents, 'text/xml');
 
 var dataFilename = process.argv[3];
 var dataContents = fs.readFileSync(dataFilename, 'UTF-8');
-var dataParse = rdf.TurtleParser.parse(dataContents);
+var dataParse = rdf.TurtleParser.parse(dataContents, baseIRI);
 var dataGraph = dataParse.graph;
 
 var rdfenv = {
@@ -28,17 +30,23 @@ var rdfenv = {
 	createLiteral: rdf.environment.createLiteral,
 }
 
-console.log('Parse:');
-debugger;
-var result = parse('http://example.com/', document);
-console.log('DOM:');
-console.log(XMLSerializer.serializeToString(result.document));
-console.log('');
-console.log('Data:');
-console.log(dataGraph.toArray().map(function(t){ return t.toString()+'\n'; }).join(''));
-console.log('Query:');
-console.log(result.outputPattern.toString());
-console.log('Recordset:');
-console.log(evaluateQuery(dataGraph, result.outputPattern));
+console.error('Parse:');
+var result = parse(baseIRI, document);
+console.error('DOM:');
+console.error(XMLSerializer.serializeToString(result.document));
+console.error('');
+console.error('Data:');
+console.error(dataGraph.toArray().map(function(t){ return t.toString()+'\n'; }).join(''));
+console.error('Query:');
+console.error(result.outputPattern.toString());
+console.error('Recordset:');
+result.parser.outputResultSets.forEach(function(query, i){
+	console.error('======');
+	console.error('RecordSet '+query.id, i);
+	console.error(query.toString());
+	console.error(query.evaluate(dataGraph));
+});
+console.error('Output:');
+console.log(XMLSerializer.serializeToString(result.parser.generateDocument(result.document, dataGraph)));
 
 

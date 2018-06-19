@@ -2,6 +2,7 @@
 var rdf = require('rdf');
 var TriplePattern = rdf.TriplePattern;
 var rdfa = require('rdfa');
+var evaluateQuery = require('./lib/query.js').evaluateQuery;
 
 exports.parse = parse;
 function parse(base, document, options){
@@ -47,10 +48,14 @@ RDFaTemplateContext.prototype.child = function child(node){
 	var ctx = rdfa.RDFaContext.prototype.child.apply(this, arguments);
 	if(node.getAttribute && node.getAttribute('subquery')==='optional'){
 		ctx.outputPattern = new Query(this.outputPattern);
+		ctx.outputPattern.id = this.parser.outputResultSets.length;
+		this.parser.outputResultSets.push(ctx.outputPattern);
 		ctx.outputPattern.optional = true;
 		this.outputPattern.queries.push(ctx.outputPattern);
 	}else if(node.getAttribute && node.getAttribute('subquery')==='each'){
 		ctx.outputPattern = new Query(this.outputPattern);
+		ctx.outputPattern.id = this.parser.outputResultSets.length;
+		this.parser.outputResultSets.push(ctx.outputPattern);
 		ctx.outputPattern.each = true;
 		this.outputPattern.queries.push(ctx.outputPattern);
 	}else{
@@ -76,7 +81,11 @@ RDFaTemplateContext.prototype.fromTERMorCURIEorAbsIRI = function fromTERMorCURIE
 rdfa.inherits(RDFaTemplateParser, rdfa.RDFaParser);
 function RDFaTemplateParser(){
 	rdfa.RDFaParser.apply(this, arguments);
+	this.outputResultSets = [];
+	this.nodeContextMap = new Map;
 	this.outputPattern = new Query;
+	this.outputPattern.id = this.outputResultSets.length;
+	this.outputResultSets.push(this.outputPattern);
 	this.outputPattern.root = true;
 	this.emitUsesVocabulary = false;
 }
@@ -87,6 +96,12 @@ RDFaTemplateParser.prototype.RDFaContext = RDFaTemplateContext;
 //	createBlankNode: rdf.environment.createBlankNode.bind(rdf.environment),
 //	createLiteral: rdf.environment.createLiteral.bind(rdf.environment),
 //};
+
+//RDFaTemplateParser.prototype.processElement = function processElement(node){
+//	rdfa.RDFaParser.prototype.processElement.apply(this, arguments);
+//	var rdfaContext = this.stack[this.stack.length-1];
+//	this.nodeContextMap.set(node, rdfaContext);
+//}
 
 RDFaTemplateParser.prototype.initialize = function initialize(){
 	rdfa.RDFaParser.prototype.initialize.apply(this, arguments);
@@ -103,6 +118,70 @@ RDFaTemplateParser.prototype.emit = function emit(s, p, o){
 	ctx.outputPattern.add(new rdf.TriplePattern(s, p, o));
 }
 
+RDFaTemplateParser.prototype.generateDocument = function generateDocument(template, dataGraph){
+	debugger;
+	var output = template.cloneNode(true);
+	var node = output;
+	// Loop through every node and ID the subqueries
+	var subqueryId = 0;
+	node.subqueryId = subqueryId++;
+	while(node){
+		if(node.getAttribute && node.getAttribute('subquery')==='each'){
+			node.subqueryId = subqueryId++;
+		}
+		// Recurse into children
+		if(node.firstChild){
+			node = node.firstChild;
+		}else{
+			while(node && !node.nextSibling) node = node.parentNode;
+			if(node) node = node.nextSibling;
+		}
+	}
+	// Now process the template
+	var node = output;
+	while(node){
+		if(node.getAttribute && node.getAttribute('subquery')==='each'){
+			// Make a copy of this node for every match in the result set
+			// First, detatch this node from the DOM
+			var itemTemplate = node.parentNode.removeChild(node);
+			var next;
+			// Get the result set
+			var query = this.outputResultSets[itemTemplate.subqueryId];
+			var resultset = query.evaluate(dataGraph);
+			resultset.forEach(function(record){
+				var newItem = itemTemplate.cloneNode(true);
+				newItem.bindings = record;
+				newItem.removeAttribute('subquery');
+				node.parentNode.appendChild(newItem);
+				if(!next) next = newItem;
+			});
+			node = next;
+		}
+		for(var bindingsNode=node; bindingsNode && !bindingsNode.bindings; bindingsNode=bindingsNode.parentNode);
+		if(node.getAttribute && node.hasAttribute('typeof')){
+			debugger;
+			var typeofAttr = node.getAttribute('typeof');
+			if(typeofAttr[0]=='{' && typeofAttr[1]=='?' && typeofAttr[typeofAttr.length-1]=='}'){
+				var varname = typeofAttr.substring(2, typeofAttr.length-1);
+				node.setAttribute('typeof', bindingsNode.bindings[varname].toString());
+			}
+		}
+		var textContent = node.textContent;
+		if(textContent && textContent[0]=='{' && textContent[1]=='?' && textContent[textContent.length-1]=='}'){
+			var varname = textContent.substring(2, textContent.length-1);
+			node.textContent = bindingsNode.bindings[textContent.substring(2, textContent.length-1)].toString();
+		}
+		// Recurse into children
+		if(node.firstChild){
+			node = node.firstChild;
+		}else{
+			while(node && !node.nextSibling) node = node.parentNode;
+			if(node) node = node.nextSibling;
+		}
+	}
+	return output;
+}
+
 module.exports.Query = Query;
 function Query(parent, sort, limit, offset){
 	this.parent = parent;
@@ -117,7 +196,7 @@ Query.prototype.add = function add(v){
 	//if(!(v instanceof rdf.TriplePattern)) throw new Error('Expected arguments[0] `pattern` to be an instance of TriplePattern');
 	this.statements.push(v);
 }
-Query.prototype.toString = function toString(){
+Query.prototype.toStringAll = function toStringAll(){
 	var str = '';
 	for(var padding='', e=this; e.parent; e=e.parent) padding+='\t';
 	
@@ -133,6 +212,14 @@ Query.prototype.toString = function toString(){
 	}
 	return str;
 }
+Query.prototype.toString = function toString(){
+	var str = '';
+	for(var q = this; q; q = q.parent){
+		str += '# Block '+q.id+'\n';
+		str += this.statements.map(function(v){ return "\t" + v.toString() + '\n'; }).join('');
+	}
+	return 'SELECT * {\n' + str + '}\n';
+}
 Query.prototype.toArray = function toArray(){
 	return this.constraints;
 }
@@ -141,4 +228,7 @@ Query.prototype.toTriplesString = function toSPARQLString(){
 	this.constraints.map(function(v){
 		return v.toTripleString();
 	}).join('');
+}
+Query.prototype.evaluate = function evaluate(dataGraph){
+	return evaluateQuery(dataGraph, this);
 }
