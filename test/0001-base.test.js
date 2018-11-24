@@ -10,6 +10,7 @@ var DOMParser = require('xmldom').DOMParser;
 
 var baseIRI = 'http://example.com/';
 
+// TODO: load this data in a before() clause
 var templateFilename = __dirname + '/data-table.html';
 var templateContents = fs.readFileSync(templateFilename, 'UTF-8');
 var sz = new XMLSerializer;
@@ -35,5 +36,15 @@ describe("0001", function(){
         assert(result.outputGraph);
         assert(result.outputPattern);
         assert(result.processorGraph);
+    });
+    it("outputPattern", function(){
+        var result = parse(baseIRI, document);
+        // TODO: verify the string is actually correct
+        assert(result.outputPattern.toString());
+    });
+    it("genreateDocument", function(){
+        var result = parse(baseIRI, document);
+        var rdoc = result.parser.generateDocument(result.document, dataGraph);
+        // TODO: verify data has appeared in DOM here
     });
 });
