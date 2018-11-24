@@ -8,7 +8,6 @@ var fs = require('fs');
 
 var rdf = require('rdf');
 var parse = require('../index.js').parse;
-var evaluateQuery = require('../lib/query.js').evaluateQuery;
 var XMLSerializer = require('xmldom').XMLSerializer;
 var DOMParser = require('xmldom').DOMParser;
 
@@ -16,7 +15,7 @@ var baseIRI = process.argv[4] || 'http://example.com/';
 
 var templateFilename = process.argv[2];
 var templateContents = fs.readFileSync(templateFilename, 'UTF-8');
-var XMLSerializer = new XMLSerializer;
+var sz = new XMLSerializer;
 var document = new DOMParser().parseFromString(templateContents, 'text/xml');
 
 var dataFilename = process.argv[3];
@@ -33,7 +32,7 @@ var rdfenv = {
 console.error('Parse:');
 var result = parse(baseIRI, document);
 console.error('DOM:');
-console.error(XMLSerializer.serializeToString(result.document));
+console.error(sz.serializeToString(result.document));
 console.error('');
 console.error('Data:');
 console.error(dataGraph.toArray().map(function(t){ return t.toString()+'\n'; }).join(''));
@@ -47,6 +46,6 @@ result.parser.outputResultSets.forEach(function(query, i){
 	console.error(query.evaluate(dataGraph));
 });
 console.error('Output:');
-console.log(XMLSerializer.serializeToString(result.parser.generateDocument(result.document, dataGraph)));
+console.log(sz.serializeToString(result.parser.generateDocument(result.document, dataGraph)));
 
 

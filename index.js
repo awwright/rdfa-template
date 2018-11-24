@@ -23,7 +23,6 @@ function parse(base, document, options){
 	return {
 		document: document,
 		parser: parser,
-		outputQuery: parser.outputQuery,
 		outputGraph: parser.outputGraph,
 		outputPattern: parser.outputPattern,
 		processorGraph: parser.processorGraph,
@@ -118,9 +117,10 @@ RDFaTemplateParser.prototype.emit = function emit(s, p, o){
 	ctx.outputPattern.add(new rdf.TriplePattern(s, p, o));
 }
 
-RDFaTemplateParser.prototype.generateDocument = function generateDocument(template, dataGraph){
+RDFaTemplateParser.prototype.generateDocument = function generateDocument(template, dataGraph, initialBindings){
 	debugger;
 	var output = template.cloneNode(true);
+	output.bindings = initialBindings || {};
 	var node = output;
 	// Loop through every node and ID the subqueries
 	var subqueryId = 0;
@@ -143,8 +143,15 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 		if(node.getAttribute && node.getAttribute('subquery')==='each'){
 			// Make a copy of this node for every match in the result set
 			// First, detatch this node from the DOM
-			var itemTemplate = node.parentNode.removeChild(node);
-			var next;
+			var parentNode = node.parentNode;
+			var resultFirst, defaultNext;
+			if(node.firstChild){
+				defaultNext = node.firstChild;
+			}else{
+				while(node && !node.nextSibling) defaultNext = node.parentNode;
+				if(node) defaultNext = node.nextSibling;
+			}
+			var itemTemplate = parentNode.removeChild(node);
 			// Get the result set
 			var query = this.outputResultSets[itemTemplate.subqueryId];
 			var resultset = query.evaluate(dataGraph);
@@ -152,12 +159,14 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 				var newItem = itemTemplate.cloneNode(true);
 				newItem.bindings = record;
 				newItem.removeAttribute('subquery');
-				node.parentNode.appendChild(newItem);
-				if(!next) next = newItem;
+				parentNode.appendChild(newItem);
+				if(!resultFirst) resultFirst = newItem;
 			});
-			node = next;
+			node = resultFirst || defaultNext;
 		}
 		for(var bindingsNode=node; bindingsNode && !bindingsNode.bindings; bindingsNode=bindingsNode.parentNode);
+		if(!node) throw new Error('no node?');
+		if(!bindingsNode) throw new Error('no bindingsNode?');
 		if(node.getAttribute && node.hasAttribute('typeof')){
 			debugger;
 			var typeofAttr = node.getAttribute('typeof');
@@ -169,6 +178,9 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 		var textContent = node.textContent;
 		if(textContent && textContent[0]=='{' && textContent[1]=='?' && textContent[textContent.length-1]=='}'){
 			var varname = textContent.substring(2, textContent.length-1);
+			if(bindingsNode.bindings[textContent.substring(2, textContent.length-1)]===undefined){
+				throw new Error('No result for '+JSON.stringify(textContent));
+			}
 			node.textContent = bindingsNode.bindings[textContent.substring(2, textContent.length-1)].toString();
 		}
 		// Recurse into children
