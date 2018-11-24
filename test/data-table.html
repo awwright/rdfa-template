@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr">
+	<head>
+		<meta charset="UTF-8" />
+		<title>People</title>
+	</head>
+	<body>
+		<main id="main-content">
+			<h1>Contact Directory</h1>
+			<table class="table-http-headers" vocab="http://xmlns.com/foaf/0.1/">
+				<thead>
+					<tr><th>Name</th><th>Homepage</th><th>Nickname</th></tr>
+				</thead>
+				<tbody>
+					<tr subquery="each" typeof="{?type}">
+						<td><span property="name">{?name}</span></td>
+						<td property="homepage">{?homepage}</td>
+						<td property="nick">{?nick}</td>
+					</tr>
+				</tbody>
+			</table>
+		</main>
+	</body>
+</html>
