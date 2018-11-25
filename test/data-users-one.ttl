@@ -1,0 +1,9 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@base <http://example.com/> .
+
+<#a>
+    a foaf:Person ;
+    foaf:name "Alice" ;
+    foaf:homepage </~a/> ;
+    foaf:nick "a" ;
+    foaf:knows <#b> .

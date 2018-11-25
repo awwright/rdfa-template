@@ -16,7 +16,7 @@ var templateContents = fs.readFileSync(templateFilename, 'UTF-8');
 var sz = new XMLSerializer;
 var document = new DOMParser().parseFromString(templateContents, 'text/xml');
 
-var dataFilename = __dirname + '/data-table.ttl';
+var dataFilename = __dirname + '/data-users-one.ttl';
 var dataContents = fs.readFileSync(dataFilename, 'UTF-8');
 var dataParse = rdf.TurtleParser.parse(dataContents, baseIRI);
 var dataGraph = dataParse.graph;
@@ -37,14 +37,37 @@ describe("0001", function(){
         assert(result.outputPattern);
         assert(result.processorGraph);
     });
-    it("outputPattern", function(){
+    it("outputResultSets", function(){
         var result = parse(baseIRI, document);
         // TODO: verify the string is actually correct
-        assert(result.outputPattern.toString());
+        assert.equal(result.parser.outputResultSets.toString(),
+            'SELECT * {\n' +
+            '# Block 0\n' +
+            '}\n' +
+            ',SELECT * {\n' +
+            '# Block 1\n' +
+            '\t_:b2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type .\n' +
+            '\t_:b2 <http://xmlns.com/foaf/0.1/name> ?name .\n' +
+            '\t_:b2 <http://xmlns.com/foaf/0.1/homepage> ?homepage .\n' +
+            '\t_:b2 <http://xmlns.com/foaf/0.1/nick> ?nick .\n' +
+            '# Block 0\n' +
+            '\t_:b2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type .\n' +
+            '\t_:b2 <http://xmlns.com/foaf/0.1/name> ?name .\n' +
+            '\t_:b2 <http://xmlns.com/foaf/0.1/homepage> ?homepage .\n' +
+            '\t_:b2 <http://xmlns.com/foaf/0.1/nick> ?nick .\n' +
+            '}\n'
+        );
     });
     it("genreateDocument", function(){
         var result = parse(baseIRI, document);
         var rdoc = result.parser.generateDocument(result.document, dataGraph);
-        // TODO: verify data has appeared in DOM here
+        var eBody = rdoc.documentElement.childNodes[3];
+        assert.equal(eBody.nodeName, 'body');
+        var eMain = rdoc.getElementById('main-content');
+        assert.equal(eMain.nodeName, 'main');
+        var eTr = rdoc.getElementsByTagName('tr');
+        assert.equal(eTr.length, 2);
+        assert.equal(eTr[0].childNodes[0].firstChild.textContent, 'Name');
+        assert.equal(eTr[1].childNodes[1].firstChild.textContent, 'Alice');
     });
 });
