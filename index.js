@@ -52,7 +52,12 @@ RDFaTemplateContext.prototype.child = function child(node){
 		ctx.outputPattern.optional = true;
 		this.outputPattern.queries.push(ctx.outputPattern);
 	}else if(node.getAttribute && node.getAttribute('subquery')==='each'){
-		ctx.outputPattern = new Query(this.outputPattern);
+		if(node.hasAttribute('subquery-order')){
+			var order = node.getAttribute('subquery-order').split(/\s+/g).map(function(v){
+				return {expression: v};
+			});
+		}
+		ctx.outputPattern = new Query(this.outputPattern, order);
 		ctx.outputPattern.id = this.parser.outputResultSets.length;
 		this.parser.outputResultSets.push(ctx.outputPattern);
 		ctx.outputPattern.each = true;
@@ -118,7 +123,6 @@ RDFaTemplateParser.prototype.emit = function emit(s, p, o){
 }
 
 RDFaTemplateParser.prototype.generateDocument = function generateDocument(template, dataGraph, initialBindings){
-	debugger;
 	var output = template.cloneNode(true);
 	output.bindings = initialBindings || {};
 	var node = output;
@@ -168,7 +172,6 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 		if(!node) throw new Error('no node?');
 		if(!bindingsNode) throw new Error('no bindingsNode?');
 		if(node.getAttribute && node.hasAttribute('typeof')){
-			debugger;
 			var typeofAttr = node.getAttribute('typeof');
 			if(typeofAttr[0]=='{' && typeofAttr[1]=='?' && typeofAttr[typeofAttr.length-1]=='}'){
 				var varname = typeofAttr.substring(2, typeofAttr.length-1);
@@ -195,12 +198,15 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 }
 
 module.exports.Query = Query;
-function Query(parent, sort, limit, offset){
+function Query(parent, order, limit, offset){
 	this.parent = parent;
 	this.statements = [];
 	this.queries = [];
 	this.optional = false;
-	this.sort = [];
+	if(order===undefined || order===null) order = [];
+	else if(Array.isArray(order)) order.forEach(function(v, i){ if(typeof v!=='object') throw new Error('Expected `order` to be an array of objects'); });
+	else throw new Error('Expected arguments[1] order to be an Array');
+	this.order = order;
 	this.limit = limit;
 	this.offset = offset;
 }
