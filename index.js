@@ -124,7 +124,7 @@ RDFaTemplateParser.prototype.emit = function emit(s, p, o){
 
 RDFaTemplateParser.prototype.generateDocument = function generateDocument(template, dataGraph, initialBindings){
 	var output = template.cloneNode(true);
-	output.bindings = initialBindings || {};
+	output.rdfaTemplateBindings = initialBindings || {};
 	var node = output;
 	// Loop through every node and ID the subqueries
 	var subqueryId = 0;
@@ -146,52 +146,57 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 	while(node){
 		if(node.getAttribute && node.getAttribute('subquery')==='each'){
 			// Make a copy of this node for every match in the result set
-			// First, detatch this node from the DOM
+			// Next iteration of the loop should skip over this entire subquery/template and go right to the next sibling/cloned node (if any)
 			var parentNode = node.parentNode;
-			var resultFirst, defaultNext;
 			if(node.firstChild){
 				defaultNext = node.firstChild;
 			}else{
 				while(node && !node.nextSibling) defaultNext = node.parentNode;
 				if(node) defaultNext = node.nextSibling;
 			}
-			var itemTemplate = parentNode.removeChild(node);
 			// Get the result set
+			var itemTemplate = node;
+			var nextSibling = itemTemplate.nextSibling;
 			var query = this.outputResultSets[itemTemplate.subqueryId];
 			var resultset = query.evaluate(dataGraph);
-			resultset.forEach(function(record){
+			resultset.forEach(function(record, i){
 				var newItem = itemTemplate.cloneNode(true);
-				newItem.bindings = record;
+				newItem.rdfaTemplateBindings = record;
+				newItem.rdfaTemplateElement = itemTemplate;
 				newItem.removeAttribute('subquery');
-				parentNode.appendChild(newItem);
-				if(!resultFirst) resultFirst = newItem;
+				newItem.removeAttribute('subquery-order');
+				newItem.setAttribute('subquery-i', i.toString());
+				parentNode.insertBefore(newItem, nextSibling);
 			});
-			node = resultFirst || defaultNext;
-		}
-		for(var bindingsNode=node; bindingsNode && !bindingsNode.bindings; bindingsNode=bindingsNode.parentNode);
-		if(!node) throw new Error('no node?');
-		if(!bindingsNode) throw new Error('no bindingsNode?');
-		if(node.getAttribute && node.hasAttribute('typeof')){
-			var typeofAttr = node.getAttribute('typeof');
-			if(typeofAttr[0]=='{' && typeofAttr[1]=='?' && typeofAttr[typeofAttr.length-1]=='}'){
-				var varname = typeofAttr.substring(2, typeofAttr.length-1);
-				node.setAttribute('typeof', bindingsNode.bindings[varname].toString());
-			}
-		}
-		var textContent = node.textContent;
-		if(textContent && textContent[0]=='{' && textContent[1]=='?' && textContent[textContent.length-1]=='}'){
-			var varname = textContent.substring(2, textContent.length-1);
-			if(bindingsNode.bindings[textContent.substring(2, textContent.length-1)]===undefined){
-				throw new Error('No result for '+JSON.stringify(textContent));
-			}
-			node.textContent = bindingsNode.bindings[textContent.substring(2, textContent.length-1)].toString();
-		}
-		// Recurse into children
-		if(node.firstChild){
-			node = node.firstChild;
-		}else{
 			while(node && !node.nextSibling) node = node.parentNode;
 			if(node) node = node.nextSibling;
+			itemTemplate.parentNode.removeChild(itemTemplate);
+		}else{
+			for(var bindingsNode=node; bindingsNode && !bindingsNode.rdfaTemplateBindings; bindingsNode=bindingsNode.parentNode);
+			if(!node) throw new Error('no node?');
+			if(!bindingsNode) throw new Error('no bindingsNode?');
+			if(node.getAttribute && node.hasAttribute('typeof')){
+				var typeofAttr = node.getAttribute('typeof');
+				if(typeofAttr[0]=='{' && typeofAttr[1]=='?' && typeofAttr[typeofAttr.length-1]=='}'){
+					var varname = typeofAttr.substring(2, typeofAttr.length-1);
+					node.setAttribute('typeof', bindingsNode.rdfaTemplateBindings[varname].toString());
+				}
+			}
+			var textContent = node.textContent;
+			if(textContent && textContent[0]=='{' && textContent[1]=='?' && textContent[textContent.length-1]=='}'){
+				var varname = textContent.substring(2, textContent.length-1);
+				if(bindingsNode.rdfaTemplateBindings[textContent.substring(2, textContent.length-1)]===undefined){
+					throw new Error('No result for '+JSON.stringify(textContent));
+				}
+				node.textContent = bindingsNode.rdfaTemplateBindings[textContent.substring(2, textContent.length-1)].toString();
+			}
+			// Recurse into children
+			if(node.firstChild){
+				node = node.firstChild;
+			}else{
+				while(node && !node.nextSibling) node = node.parentNode;
+				if(node) node = node.nextSibling;
+			}
 		}
 	}
 	return output;

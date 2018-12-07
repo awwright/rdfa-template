@@ -16,7 +16,7 @@ var baseIRI = process.argv[4] || 'http://example.com/';
 var templateFilename = process.argv[2];
 var templateContents = fs.readFileSync(templateFilename, 'UTF-8');
 var sz = new XMLSerializer;
-var document = new DOMParser().parseFromString(templateContents, 'text/xml');
+var document = new DOMParser().parseFromString(templateContents, 'application/xml');
 
 var dataFilename = process.argv[3];
 var dataContents = fs.readFileSync(dataFilename, 'UTF-8');

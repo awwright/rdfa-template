@@ -20,12 +20,6 @@ var dataFilename = __dirname + '/data-table.ttl';
 var dataContents = fs.readFileSync(dataFilename, 'UTF-8');
 var dataGraph = new rdf.Graph();
 
-var rdfenv = {
-	createNamedNode: rdf.environment.createNamedNode,
-	createBlankNode: rdf.environment.createBlankNode,
-	createLiteral: rdf.environment.createLiteral,
-}
-
 describe("0003", function(){
     it("genreateDocument: no results on empty input", function(){
         var result = parse(baseIRI, document);

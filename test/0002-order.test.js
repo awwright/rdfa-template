@@ -21,12 +21,6 @@ var dataContents = fs.readFileSync(dataFilename, 'UTF-8');
 var dataParse = rdf.TurtleParser.parse(dataContents, baseIRI);
 var dataGraph = dataParse.graph;
 
-var rdfenv = {
-	createNamedNode: rdf.environment.createNamedNode,
-	createBlankNode: rdf.environment.createBlankNode,
-	createLiteral: rdf.environment.createLiteral,
-}
-
 describe("0002", function(){
     it("genreateDocument ASC(?name)", function(){
         var result = parse(baseIRI, document);
