@@ -16,18 +16,23 @@ var templateContents = fs.readFileSync(templateFilename, 'UTF-8');
 var sz = new XMLSerializer;
 var document = new DOMParser().parseFromString(templateContents, 'text/xml');
 
-var dataGraph = new rdf.Graph();
+var dataFilename = __dirname + '/data-table.ttl';
+var dataContents = fs.readFileSync(dataFilename, 'UTF-8');
+var dataParse = rdf.TurtleParser.parse(dataContents, baseIRI);
+var dataGraph = dataParse.graph;
 
-describe("0003", function(){
-    it("genreateDocument: no results on empty input", function(){
+describe("0004", function(){
+    it("genreateDocument: pass in a variable binding", function(){
         var result = parse(baseIRI, document);
-        var rdoc = result.parser.generateDocument(result.document, dataGraph);
+        var rdoc = result.parser.generateDocument(result.document, dataGraph, {name: new rdf.Literal('Alice')});
         var eBody = rdoc.documentElement.childNodes[3];
         assert.equal(eBody.nodeName, 'body');
         var eMain = rdoc.getElementById('main-content');
         assert.equal(eMain.nodeName, 'main');
         var eTr = rdoc.getElementsByTagName('tr');
-        assert.equal(eTr.length, 1);
+        assert.equal(eTr.length, 2);
         assert.equal(eTr[0].childNodes[0].firstChild.textContent, 'Name');
+        // assert.equal(eTr[1].childNodes[1].firstChild.textContent, 'Alice');
+        // assert.equal(eTr[1].childNodes[3].firstChild.textContent, 'http://example.com/~a');
     });
 });

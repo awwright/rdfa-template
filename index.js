@@ -158,7 +158,7 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 			var itemTemplate = node;
 			var nextSibling = itemTemplate.nextSibling;
 			var query = this.outputResultSets[itemTemplate.subqueryId];
-			var resultset = query.evaluate(dataGraph);
+			var resultset = query.evaluate(dataGraph, initialBindings);
 			resultset.forEach(function(record, i){
 				var newItem = itemTemplate.cloneNode(true);
 				newItem.rdfaTemplateBindings = record;
@@ -168,8 +168,10 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 				newItem.setAttribute('subquery-i', i.toString());
 				parentNode.insertBefore(newItem, nextSibling);
 			});
+			// Forward to the first inserted item, or otherwise the next element after the template
 			while(node && !node.nextSibling) node = node.parentNode;
 			if(node) node = node.nextSibling;
+			// And then remove the template from the tree
 			itemTemplate.parentNode.removeChild(itemTemplate);
 		}else{
 			for(var bindingsNode=node; bindingsNode && !bindingsNode.rdfaTemplateBindings; bindingsNode=bindingsNode.parentNode);
@@ -252,6 +254,6 @@ Query.prototype.toTriplesString = function toSPARQLString(){
 		return v.toTripleString();
 	}).join('');
 }
-Query.prototype.evaluate = function evaluate(dataGraph){
-	return evaluateQuery(dataGraph, this);
+Query.prototype.evaluate = function evaluate(dataGraph, initialBindings){
+	return evaluateQuery(dataGraph, this, initialBindings);
 }
