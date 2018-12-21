@@ -1,6 +1,8 @@
+/*
 #show-hide-main-content + div {
     display: none;
 }
 #show-hide-main-content:checked + div {
     display: block;
 }
+*/
