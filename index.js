@@ -110,7 +110,8 @@ RDFaTemplateParser.prototype.RDFaContext = RDFaTemplateContext;
 RDFaTemplateParser.prototype.initialize = function initialize(){
 	rdfa.RDFaParser.prototype.initialize.apply(this, arguments);
 	this.stack[0].outputPattern = this.outputPattern;
-	this.stack[0].base = new rdf.Variable('?base');
+	//this.stack[0].base = new rdf.Variable('?base');
+	//this.stack[0].base = new rdf.NamedNode('http://example.com/');
 }
 
 RDFaTemplateParser.prototype.emit = function emit(s, p, o){

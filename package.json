@@ -11,10 +11,11 @@
   "author": "Austin Wright",
   "license": "Unlicense",
   "dependencies": {
-    "rdfa": "^0.0.4",
+    "rdfa": "0.0.4",
     "xmldom": "^0.1.27"
   },
   "devDependencies": {
+    "browserify": "^16.2.3",
     "mocha": "^5.1.1"
   },
   "bin": {},
