@@ -32,7 +32,7 @@ describe("0004", function(){
         var eTr = rdoc.getElementsByTagName('tr');
         assert.equal(eTr.length, 2);
         assert.equal(eTr[0].childNodes[0].firstChild.textContent, 'Name');
-        // assert.equal(eTr[1].childNodes[1].firstChild.textContent, 'Alice');
-        // assert.equal(eTr[1].childNodes[3].firstChild.textContent, 'http://example.com/~a');
+        assert.equal(eTr[1].childNodes[1].firstChild.textContent, 'Alice');
+        assert.equal(eTr[1].childNodes[3].firstChild.textContent, 'http://example.com/~a');
     });
 });
