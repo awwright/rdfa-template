@@ -298,6 +298,7 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 					if(rdfaContext.isVariable(attributeValue)){
 						var varname = rdfaContext.getVariable(attributeValue);
 						node.setAttribute(attributeName, bindingsNode.rdfaTemplateBindings[varname].toString());
+						node.removeAttribute(patternName);
 					}
 				}
 			});
@@ -320,6 +321,7 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 					if(rdfaContext.isVariable(attributeValue)){
 						var varname = rdfaContext.getVariable(attributeValue);
 						node.setAttribute(attributeName, bindingsNode.rdfaTemplateBindings[varname].toString());
+						node.removeAttribute(patternName);
 					}
 				}
 			});

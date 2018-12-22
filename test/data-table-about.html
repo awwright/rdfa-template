@@ -9,12 +9,12 @@
 			<h1>Contact Directory</h1>
 			<table class="table-http-headers" vocab="http://xmlns.com/foaf/0.1/">
 				<thead>
-					<tr><th>Name</th><th>Homepage</th><th>Nickname</th></tr>
+					<tr><th>URI</th><th>Name</th><th>Nickname</th></tr>
 				</thead>
 				<tbody>
-					<tr subquery="each" subquery-order="?name" typeof-bind="{?type}">
+					<tr subquery="each" subquery-order="?name" about-bind="{?subject}" typeof-bind="{?type}">
+						<td><a href-bind="{?subject}">{?subject}</a></td>
 						<td><span property="name">{?name}</span></td>
-						<td property="homepage">{?homepage}</td>
 						<td property="nick">{?nick}</td>
 					</tr>
 				</tbody>
