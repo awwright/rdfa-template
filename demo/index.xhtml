@@ -48,7 +48,7 @@
 				<tbody>
 					<tr subquery="each" subquery-order="?name" typeof="{?type}">
 						<td><span property="name">{?name}</span></td>
-						<td property="homepage">{?homepage}</td>
+						<td><a property="homepage" href-bind="{?homepage}">{?homepage}</a></td>
 						<td property="nick">{?nick}</td>
 					</tr>
 				</tbody>
