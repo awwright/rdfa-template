@@ -114,6 +114,114 @@ RDFaTemplateParser.prototype.initialize = function initialize(){
 	//this.stack[0].base = new rdf.NamedNode('http://example.com/');
 }
 
+RDFaTemplateParser.prototype.getRel = function getRel(node){
+	if(node.hasAttribute('rel-bind')) return node.getAttribute('rel-bind');
+	return node.hasAttribute('rel') ? node.getAttribute('rel') : null;
+};
+RDFaTemplateParser.prototype.getRev = function getRev(node){
+	if(node.hasAttribute('rev-bind')) return node.getAttribute('rev-bind');
+	return node.hasAttribute('rev') ? node.getAttribute('rev') : null;
+};
+RDFaTemplateParser.prototype.getTypeof = function getTypeof(node){
+	if(node.hasAttribute('typeof-bind')) return node.getAttribute('typeof-bind');
+	return node.hasAttribute('typeof') ? node.getAttribute('typeof') : null;
+};
+RDFaTemplateParser.prototype.getProperty = function getProperty(node){
+	if(node.hasAttribute('property-bind')) return node.getAttribute('property-bind');
+	return node.hasAttribute('property') ? node.getAttribute('property') : null;
+};
+RDFaTemplateParser.prototype.getDatetime = function getDatetime(node){
+	if(node.hasAttribute('datetime-bind')) return node.getAttribute('datetime-bind');
+	return node.hasAttribute('datetime') ? node.getAttribute('datetime') : null;
+};
+RDFaTemplateParser.prototype.getContent = function getContent(node){
+	if(node.hasAttribute('content-bind')) return node.getAttribute('content-bind');
+	return node.hasAttribute('content') ? node.getAttribute('content') : null;
+};
+RDFaTemplateParser.prototype.getAbout = function getAbout(node){
+	if(node.hasAttribute('about-bind')) return node.getAttribute('about-bind');
+	return node.hasAttribute('about') ? node.getAttribute('about') : null;
+};
+RDFaTemplateParser.prototype.getSrc = function getSrc(node){
+	if(node.hasAttribute('src-bind')) return node.getAttribute('src-bind');
+	return node.hasAttribute('src') ? node.getAttribute('src') : null;
+};
+RDFaTemplateParser.prototype.getResource = function getResource(node){
+	if(node.hasAttribute('resource-bind')) return node.getAttribute('resource-bind');
+	return node.hasAttribute('resource') ? node.getAttribute('resource') : null;
+};
+RDFaTemplateParser.prototype.getHref = function getHref(node){
+	if(node.hasAttribute('href-bind')) return node.getAttribute('href-bind');
+	return node.hasAttribute('href') ? node.getAttribute('href') : null;
+};
+
+RDFaTemplateContext.prototype.isVariable = function isVariable(str){
+	return typeof str=='string' && str[0]=='{' && str[1]=='?' && str[str.length-1]=='}';
+}
+RDFaTemplateContext.prototype.getVariable = function getVariable(str){
+	return new rdf.Variable(str.substring(2, str.length-1));
+}
+
+RDFaTemplateContext.prototype.getRelNode = function getRelNode(node){
+	var attr = this.parser.getRel(node);
+	if(typeof attr=='string') return this.fromTERMorCURIEorAbsIRIs(attr);
+	return attr;
+};
+RDFaTemplateContext.prototype.getRevNode = function getRevNode(node){
+	var attr = this.parser.getRev(node);
+	if(this.isVariable(attr)) return [this.getVariable(attr)];
+	if(typeof attr=='string') return this.fromTERMorCURIEorAbsIRIs(attr);
+	return attr;
+};
+RDFaTemplateContext.prototype.getTypeofNode = function getTypeofNode(node){
+	var attr = this.parser.getTypeof(node);
+	if(this.isVariable(attr)) return [this.getVariable(attr)];
+	if(typeof attr=='string') return this.fromTERMorCURIEorAbsIRIs(attr);
+	return attr;
+};
+RDFaTemplateContext.prototype.getPropertyNode = function getPropertyNode(node){
+	var attr = this.parser.getProperty(node);
+	if(this.isVariable(attr)) return [this.getVariable(attr)];
+	if(typeof attr=='string') return this.fromTERMorCURIEorAbsIRIs(attr);
+	return attr;
+};
+RDFaTemplateContext.prototype.getDatatypeNode = function getDatatypeNode(node){
+	var attr = this.parser.getDatatype(node);
+	if(this.isVariable(attr)) return this.getVariable(attr);
+	if(typeof attr=='string') return this.fromTERMorCURIEorAbsIRI(attr);
+	return attr;
+};
+// RDFaTemplateContext.prototype.getContentNode = function getContentNode(node){
+// 	var attr = this.parser.getContent(node);
+// 	if(typeof attr=='string') return this.from(attr);
+// 	return attr;
+// };
+RDFaTemplateContext.prototype.getAboutNode = function getAboutNode(node){
+	var attr = this.parser.getAbout(node);
+	if(this.isVariable(attr)) return this.getVariable(attr);
+	if(typeof attr=='string') return this.fromSafeCURIEorCURIEorIRI(attr);
+	return attr;
+};
+RDFaTemplateContext.prototype.getSrcNode = function getSrcNode(node){
+	var attr = this.parser.getSrc(node);
+	if(this.isVariable(attr)) return this.getVariable(attr);
+	if(typeof attr=='string') return this.fromIRI(attr);
+	return attr;
+};
+RDFaTemplateContext.prototype.getResourceNode = function getResourceNode(node){
+	var attr = this.parser.getResource(node);
+	if(this.isVariable(attr)) return this.getVariable(attr);
+	if(typeof attr=='string') return this.fromSafeCURIEorCURIEorIRI(attr);
+	return attr;
+};
+RDFaTemplateContext.prototype.getHrefNode = function getHrefNode(node){
+	var attr = this.parser.getHref(node);
+	if(this.isVariable(attr)) return this.getVariable(attr);
+	if(typeof attr=='string') return this.fromIRI(attr);
+	return attr;
+};
+
+
 RDFaTemplateParser.prototype.emit = function emit(s, p, o){
 	var ctx = this.stack[this.stack.length-1];
 	if(o.termType=='Literal' && o.value[0]=='{' && o.value[o.value.length-1]=='}'){
@@ -124,6 +232,7 @@ RDFaTemplateParser.prototype.emit = function emit(s, p, o){
 }
 
 RDFaTemplateParser.prototype.generateDocument = function generateDocument(template, dataGraph, initialBindings){
+	var self = this;
 	var output = template.cloneNode(true);
 	output.rdfaTemplateBindings = initialBindings || {};
 	var node = output;
@@ -145,6 +254,7 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 	// Now process the template
 	var node = output;
 	while(node){
+		var rdfaContext = self.stack[this.stack.length-1];
 		if(node.getAttribute && node.getAttribute('subquery')==='each'){
 			// Make a copy of this node for every match in the result set
 			// Next iteration of the loop should skip over this entire subquery/template and go right to the next sibling/cloned node (if any)
@@ -178,14 +288,42 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 			for(var bindingsNode=node; bindingsNode && !bindingsNode.rdfaTemplateBindings; bindingsNode=bindingsNode.parentNode);
 			if(!node) throw new Error('no node?');
 			if(!bindingsNode) throw new Error('no bindingsNode?');
-			if(node.getAttribute && node.hasAttribute('typeof')){
-				var typeofAttr = node.getAttribute('typeof');
-				if(typeofAttr[0]=='{' && typeofAttr[1]=='?' && typeofAttr[typeofAttr.length-1]=='}'){
-					var varname = typeofAttr.substring(2, typeofAttr.length-1);
-					node.setAttribute('typeof', bindingsNode.rdfaTemplateBindings[varname].toString());
+			// attributes that accept content
+			[
+				'content',
+			].forEach(function(attributeName){
+				var patternName = attributeName + '-bind';
+				if(node.getAttribute && node.hasAttribute(patternName)){
+					var attributeValue = node.getAttribute(patternName);
+					if(rdfaContext.isVariable(attributeValue)){
+						var varname = rdfaContext.getVariable(attributeValue);
+						node.setAttribute(attributeName, bindingsNode.rdfaTemplateBindings[varname].toString());
+					}
 				}
-			}
-			var textContent = node.textContent;
+			});
+			// attributes that support full IRI
+			[
+				'about',
+				'href',
+				'property',
+				'rel',
+				'resource',
+				'rev',
+				'typeof',
+				'datetime',
+				'content',
+				'src',
+			].forEach(function(attributeName){
+				var patternName = attributeName + '-bind';
+				if(node.getAttribute && node.hasAttribute(patternName)){
+					var attributeValue = node.getAttribute(patternName);
+					if(rdfaContext.isVariable(attributeValue)){
+						var varname = rdfaContext.getVariable(attributeValue);
+						node.setAttribute(attributeName, bindingsNode.rdfaTemplateBindings[varname].toString());
+					}
+				}
+			});
+			var textContent = node.firstChild && node.firstChild.data;
 			if(textContent && textContent[0]=='{' && textContent[1]=='?' && textContent[textContent.length-1]=='}'){
 				var varname = textContent.substring(2, textContent.length-1);
 				if(bindingsNode.rdfaTemplateBindings[textContent.substring(2, textContent.length-1)]===undefined){
