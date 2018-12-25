@@ -27,14 +27,14 @@ describe("0004", function(){
         // TODO: verify the string is actually correct
         assert.equal(result.parser.outputResultSets.toString(),
             'SELECT * {\n' +
-            '# Block 0\n' +
+            '\t# Block 0\n' +
             '}\n' +
             ',SELECT * {\n' +
-            '# Block 1\n' +
+            '\t# Block 1\n' +
             '\t?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type .\n' +
             '\t?subject <http://xmlns.com/foaf/0.1/name> ?name .\n' +
             '\t?subject <http://xmlns.com/foaf/0.1/nick> ?nick .\n' +
-            '# Block 0\n' +
+            '\t# Block 0\n' +
             '}\n'
         );
     });
@@ -42,7 +42,7 @@ describe("0004", function(){
         var result = parse(baseIRI, document);
         var rdoc = result.parser.generateDocument(result.document, dataGraph);
         var eBody = rdoc.documentElement.childNodes[3];
-        console.log(eBody.toString());
+        // console.log(eBody.toString());
         assert.equal(eBody.nodeName, 'body');
         var eMain = rdoc.getElementById('main-content');
         assert.equal(eMain.nodeName, 'main');

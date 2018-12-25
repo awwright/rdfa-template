@@ -36,15 +36,15 @@ describe("0001", function(){
         // TODO: verify the string is actually correct
         assert.equal(result.parser.outputResultSets.toString(),
             'SELECT * {\n' +
-            '# Block 0\n' +
+            '\t# Block 0\n' +
             '}\n' +
             ',SELECT * {\n' +
-            '# Block 1\n' +
+            '\t# Block 1\n' +
             '\t_:b2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type .\n' +
             '\t_:b2 <http://xmlns.com/foaf/0.1/name> ?name .\n' +
             '\t_:b2 <http://xmlns.com/foaf/0.1/homepage> ?homepage .\n' +
             '\t_:b2 <http://xmlns.com/foaf/0.1/nick> ?nick .\n' +
-            '# Block 0\n' +
+            '\t# Block 0\n' +
             '}\n'
         );
     });

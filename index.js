@@ -381,7 +381,7 @@ Query.prototype.toStringAll = function toStringAll(){
 Query.prototype.toString = function toString(){
 	var str = '';
 	for(var q = this; q; q = q.parent){
-		str += '# Block '+q.id+'\n';
+		str += '\t# Block '+q.id+'\n';
 		str += q.statements.map(function(v){ return "\t" + v.toString() + '\n'; }).join('');
 	}
 	return 'SELECT * {\n' + str + '}\n';
