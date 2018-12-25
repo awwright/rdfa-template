@@ -326,12 +326,12 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 				}
 			});
 			var textContent = node.firstChild && node.firstChild.data;
-			if(textContent && textContent[0]=='{' && textContent[1]=='?' && textContent[textContent.length-1]=='}'){
-				var varname = textContent.substring(2, textContent.length-1);
-				if(bindingsNode.rdfaTemplateBindings[textContent.substring(2, textContent.length-1)]===undefined){
+			if(rdfaContext.isVariable(textContent)){
+				var varname = rdfaContext.getVariable(textContent);
+				if(bindingsNode.rdfaTemplateBindings[varname]===undefined){
 					throw new Error('No result for '+JSON.stringify(textContent));
 				}
-				node.textContent = bindingsNode.rdfaTemplateBindings[textContent.substring(2, textContent.length-1)].toString();
+				node.textContent = bindingsNode.rdfaTemplateBindings[varname].toString();
 			}
 			// Recurse into children
 			if(node.firstChild){
