@@ -35,9 +35,6 @@ describe("0004", function(){
             '\t?subject <http://xmlns.com/foaf/0.1/name> ?name .\n' +
             '\t?subject <http://xmlns.com/foaf/0.1/nick> ?nick .\n' +
             '# Block 0\n' +
-            '\t?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type .\n' +
-            '\t?subject <http://xmlns.com/foaf/0.1/name> ?name .\n' +
-            '\t?subject <http://xmlns.com/foaf/0.1/nick> ?nick .\n' +
             '}\n'
         );
     });

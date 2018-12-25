@@ -382,7 +382,7 @@ Query.prototype.toString = function toString(){
 	var str = '';
 	for(var q = this; q; q = q.parent){
 		str += '# Block '+q.id+'\n';
-		str += this.statements.map(function(v){ return "\t" + v.toString() + '\n'; }).join('');
+		str += q.statements.map(function(v){ return "\t" + v.toString() + '\n'; }).join('');
 	}
 	return 'SELECT * {\n' + str + '}\n';
 }

@@ -36,10 +36,6 @@ describe("0004", function(){
             '\t_:b7 <http://xmlns.com/foaf/0.1/homepage> ?homepage .\n' +
             '\t_:b7 <http://xmlns.com/foaf/0.1/nick> ?nick .\n' +
             '# Block 0\n' +
-            '\t_:b7 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type .\n' +
-            '\t_:b7 <http://xmlns.com/foaf/0.1/name> ?name .\n' +
-            '\t_:b7 <http://xmlns.com/foaf/0.1/homepage> ?homepage .\n' +
-            '\t_:b7 <http://xmlns.com/foaf/0.1/nick> ?nick .\n' +
             '}\n'
         );
     });
