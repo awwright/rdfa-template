@@ -2,6 +2,8 @@
 
 Fill variables on an RDFa page with data from an RDF graph.
 
+Guarentees that the generated RDFa document will contain triples also present in the source graph.
+
 ## Tests
 
 Run `mocha` to run tests.
