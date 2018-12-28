@@ -255,7 +255,16 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 	var node = output;
 	while(node){
 		var rdfaContext = self.stack[this.stack.length-1];
-		if(node.getAttribute && node.getAttribute('subquery')==='each'){
+		if(node===output){
+			//console.log(this.outputResultSets.map(function(v){ return v.toString(); }));
+			var query = this.outputResultSets[0];
+			var resultset = query.evaluate(dataGraph, initialBindings);
+			if(resultset.length>1){
+				throw new Error('Multiple matches for root node');
+			}
+			node.rdfaTemplateBindings = resultset[0] || {};
+			node = node.firstChild;
+		}else if(node.getAttribute && node.getAttribute('subquery')==='each'){
 			// Make a copy of this node for every match in the result set
 			// Next iteration of the loop should skip over this entire subquery/template and go right to the next sibling/cloned node (if any)
 			var parentNode = node.parentNode;

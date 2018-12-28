@@ -123,7 +123,7 @@ describe("generateDocument", function(){
 		assert.equal(table[3][1].firstChild.textContent, 'http://example.com/~c');
 		assert.equal(table[3][2].firstChild.textContent, 'c');
 	});
-	it('0006', function(){
+	it('subquery=each about-bind, href-bind', function(){
 		var doc = generateTest(
 			templateFromFile('data-table-about.html'),
 			dataFromFile('data-table.ttl'),
@@ -148,5 +148,21 @@ describe("generateDocument", function(){
 		assert.equal(table[3][0].firstChild.getAttribute('href'), 'http://example.com/#c');
 		assert.equal(table[3][1].firstChild.textContent, 'Charlie');
 		assert.equal(table[3][2].firstChild.textContent, 'c');
+	});
+	it('link tag with standard link relation 1', function(){
+		var doc = generateTest(
+			templateFromFile('data-link-var.html'),
+			dataFromFile('data-link-standard.ttl'),
+		);
+		var links = elements(doc.getElementsByTagName('link'));
+		//assert(links[0].)
+	});
+	it('link tag with standard link relation 2', function(){
+		var doc = generateTest(
+			templateFromFile('data-link-var.html'),
+			dataFromFile('data-link-custom.ttl'),
+		);
+		var links = elements(doc.getElementsByTagName('link'));
+		//assert(links[0].)
 	});
 });
