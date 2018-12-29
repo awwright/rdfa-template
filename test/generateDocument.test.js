@@ -153,16 +153,20 @@ describe("generateDocument", function(){
 		var doc = generateTest(
 			templateFromFile('data-link-var.html'),
 			dataFromFile('data-link-standard.ttl'),
+			null,
+			{ predicate: new rdf.NamedNode('http://www.w3.org/1999/xhtml/vocab#up') }
 		);
 		var links = elements(doc.getElementsByTagName('link'));
-		//assert(links[0].)
+		assert.equal(links[0].getAttribute('rel'), 'up');
 	});
 	it('link tag with standard link relation 2', function(){
 		var doc = generateTest(
 			templateFromFile('data-link-var.html'),
 			dataFromFile('data-link-custom.ttl'),
+			null,
+			{ predicate: new rdf.NamedNode('http://example.com/term/property') }
 		);
 		var links = elements(doc.getElementsByTagName('link'));
-		//assert(links[0].)
+		assert.equal(links[0].getAttribute('rel'), 'http://example.com/term/property');
 	});
 });

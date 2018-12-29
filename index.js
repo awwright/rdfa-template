@@ -243,8 +243,13 @@ RDFaTemplateParser.prototype.generateInitialList = function generateInitialList(
 RDFaTemplateParser.prototype.generateDocument = function generateDocument(template, dataGraph, initialBindings){
 	var self = this;
 	var output = template.cloneNode(true);
+	initialBindings = initialBindings || {};
 	// TODO: verify that initialBindings provides all the required bindings for the top-level query
-	output.rdfaTemplateBindings = initialBindings || {};
+	var rootQuery = self.outputResultSets[0];
+	for(var n in rootQuery.variables){
+		if(!initialBindings[n]) throw new Error('Expected variable '+JSON.stringify(n)+' to be bound');
+	}
+	output.rdfaTemplateBindings = initialBindings;
 	var node=template, clone=output;
 	// Make a copy of the array but skip the first query;
 	// bindings for this top-level query must be provided in initialBindings.
@@ -364,6 +369,7 @@ function Query(node, parent, order, limit, offset){
 	this.parent = parent;
 	this.statements = [];
 	this.queries = [];
+	this.variables = {};
 	this.optional = false;
 	if(order===undefined || order===null) order = [];
 	else if(Array.isArray(order)) order.forEach(function(v, i){ if(typeof v!=='object') throw new Error('Expected `order` to be an array of objects'); });
@@ -374,6 +380,9 @@ function Query(node, parent, order, limit, offset){
 }
 Query.prototype.add = function add(v){
 	//if(!(v instanceof rdf.TriplePattern)) throw new Error('Expected arguments[0] `pattern` to be an instance of TriplePattern');
+	if(v.subject.termType=='Variable') this.variables[v.subject] = v.subject;
+	if(v.predicate.termType=='Variable') this.variables[v.predicate] = v.predicate;
+	if(v.object.termType=='Variable') this.variables[v.object] = v.object;
 	this.statements.push(v);
 }
 Query.prototype.toStringAll = function toStringAll(){

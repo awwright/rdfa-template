@@ -9,8 +9,10 @@
 
 ## Features
 
-* Feature: Standard mode returns a record set of documents, a document for each matching record in the query result set. Useful for 
-* Feature: Fill mode returns a single document and errors in the event of multiple or zero matching documents.
+* Return a record set of documents, for each possible binding to the query in the template
+* Variation where variables are filled with exactly one binding
+* Verify a document is constistent with a reference graph
+* Fill subqueries in a document with a recordset
 
 
 ## Test cases
