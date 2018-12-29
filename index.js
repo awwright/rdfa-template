@@ -11,8 +11,7 @@ function parse(base, document, options){
 	if(typeof document!=='object') throw new Error('Unexpected argument');
 	if(typeof options==='object'){
 	}
-	var parser = new RDFaTemplateParser(base, document.documentElement);
-	var node = document;
+	var parser = new RDFaTemplateParser(base, document);
 
 	if(typeof options==='object'){
 		if(options.rdfenv) parser.rdfenv = options.rdfenv;
@@ -46,7 +45,7 @@ RDFaTemplateContext.prototype.resolveReference = function resolveReference(irire
 RDFaTemplateContext.prototype.child = function child(node){
 	var ctx = rdfa.RDFaContext.prototype.child.apply(this, arguments);
 	if(node.getAttribute && node.getAttribute('subquery')==='optional'){
-		ctx.outputPattern = new Query(this.outputPattern);
+		ctx.outputPattern = new Query(node, this.outputPattern);
 		ctx.outputPattern.id = this.parser.outputResultSets.length;
 		this.parser.outputResultSets.push(ctx.outputPattern);
 		ctx.outputPattern.optional = true;
@@ -57,7 +56,7 @@ RDFaTemplateContext.prototype.child = function child(node){
 				return {expression: v};
 			});
 		}
-		ctx.outputPattern = new Query(this.outputPattern, order);
+		ctx.outputPattern = new Query(node, this.outputPattern, order);
 		ctx.outputPattern.id = this.parser.outputResultSets.length;
 		this.parser.outputResultSets.push(ctx.outputPattern);
 		ctx.outputPattern.each = true;
@@ -83,11 +82,12 @@ RDFaTemplateContext.prototype.fromTERMorCURIEorAbsIRI = function fromTERMorCURIE
 }
 
 rdfa.inherits(RDFaTemplateParser, rdfa.RDFaParser);
-function RDFaTemplateParser(){
+function RDFaTemplateParser(base, document){
 	rdfa.RDFaParser.apply(this, arguments);
+	this.template = document;
 	this.outputResultSets = [];
 	this.nodeContextMap = new Map;
-	this.outputPattern = new Query;
+	this.outputPattern = new Query(document, null);
 	this.outputPattern.id = this.outputResultSets.length;
 	this.outputResultSets.push(this.outputPattern);
 	this.outputPattern.root = true;
@@ -231,40 +231,41 @@ RDFaTemplateParser.prototype.emit = function emit(s, p, o){
 	ctx.outputPattern.add(new rdf.TriplePattern(s, p, o));
 }
 
+// Execute the first query on the template over the provided dataGraph
+// The returned records are suitable for providing to generateDocument for completing the record set
+RDFaTemplateParser.prototype.generateInitialList = function generateInitialList(dataGraph, initialBindings){
+	var self = this;
+	var query = self.outputResultSets[0];
+	var resultset = query.evaluate(dataGraph, initialBindings);
+	return resultset;
+}
+
 RDFaTemplateParser.prototype.generateDocument = function generateDocument(template, dataGraph, initialBindings){
 	var self = this;
 	var output = template.cloneNode(true);
+	// TODO: verify that initialBindings provides all the required bindings for the top-level query
 	output.rdfaTemplateBindings = initialBindings || {};
-	var node = output;
-	// Loop through every node and ID the subqueries
-	var subqueryId = 0;
-	node.subqueryId = subqueryId++;
-	while(node){
-		if(node.getAttribute && node.getAttribute('subquery')==='each'){
-			node.subqueryId = subqueryId++;
+	var node=template, clone=output;
+	// Make a copy of the array but skip the first query;
+	// bindings for this top-level query must be provided in initialBindings.
+	var outputResultSets = self.outputResultSets.slice(1);
+	// Copy query information
+	while(node && outputResultSets.length){
+		if(node===outputResultSets[0].node){
+			clone.rdfaTemplateQuery = outputResultSets.shift();
 		}
-		// Recurse into children
 		if(node.firstChild){
-			node = node.firstChild;
+			node=node.firstChild, clone=clone.firstChild;
 		}else{
-			while(node && !node.nextSibling) node = node.parentNode;
-			if(node) node = node.nextSibling;
+			while(node && !node.nextSibling) node=node.parentNode, clone=clone.parentNode;
+			if(node) node=node.nextSibling, clone=clone.nextSibling;
 		}
 	}
-	// Now process the template
+	// Now process the copy
 	var node = output;
 	while(node){
 		var rdfaContext = self.stack[this.stack.length-1];
-		if(node===output){
-			//console.log(this.outputResultSets.map(function(v){ return v.toString(); }));
-			var query = this.outputResultSets[0];
-			var resultset = query.evaluate(dataGraph, initialBindings);
-			if(resultset.length>1){
-				throw new Error('Multiple matches for root node');
-			}
-			node.rdfaTemplateBindings = resultset[0] || {};
-			node = node.firstChild;
-		}else if(node.getAttribute && node.getAttribute('subquery')==='each'){
+		if(node.rdfaTemplateQuery){
 			// Make a copy of this node for every match in the result set
 			// Next iteration of the loop should skip over this entire subquery/template and go right to the next sibling/cloned node (if any)
 			var parentNode = node.parentNode;
@@ -277,10 +278,13 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 			// Get the result set
 			var itemTemplate = node;
 			var nextSibling = itemTemplate.nextSibling;
-			var query = this.outputResultSets[itemTemplate.subqueryId];
-			var resultset = query.evaluate(dataGraph, initialBindings);
+			var query = node.rdfaTemplateQuery;
+			for(var bindingsNode=node; bindingsNode && !bindingsNode.rdfaTemplateBindings; bindingsNode=bindingsNode.parentNode);
+			if(!bindingsNode) throw new Error('no bindingsNode?');
+			var resultset = query.evaluate(dataGraph, bindingsNode.rdfaTemplateBindings);
 			resultset.forEach(function(record, i){
 				var newItem = itemTemplate.cloneNode(true);
+				newItem.rdfaTemplateQuery = null;
 				newItem.rdfaTemplateBindings = record;
 				newItem.rdfaTemplateElement = itemTemplate;
 				newItem.removeAttribute('subquery');
@@ -355,7 +359,8 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 }
 
 module.exports.Query = Query;
-function Query(parent, order, limit, offset){
+function Query(node, parent, order, limit, offset){
+	this.node = node;
 	this.parent = parent;
 	this.statements = [];
 	this.queries = [];

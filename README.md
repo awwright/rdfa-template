@@ -8,13 +8,6 @@ Guarentees that the generated RDFa document will contain triples also present in
 
 Run `mocha` to run tests.
 
-Tests should verify the following:
-
-* Generated queries on source graph
-* Produced DOM tree
-* RDF from DOM matches source graph
-* Handling of variables/placeholders in each of the supported RDFa attributes
-
 ## Index of Files
 
 * bin/process.js - command line executable
