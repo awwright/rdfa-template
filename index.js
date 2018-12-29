@@ -34,6 +34,9 @@ function RDFaTemplateContext(){
 }
 
 RDFaTemplateContext.prototype.resolveReference = function resolveReference(iriref){
+	if(iriref.termType==='Variable'){
+		return iriref;
+	}
 	if(this.base.termType=='Variable'){
 		if(iriref=='') return this.base;
 		else if(iriref.match(/^[a-zA-Z][a-zA-Z0-9+.\-]*:/)) return iriref;
@@ -244,7 +247,9 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 	var self = this;
 	var output = template.cloneNode(true);
 	initialBindings = initialBindings || {};
-	// TODO: verify that initialBindings provides all the required bindings for the top-level query
+	// TODO: verify that initialBindings produces statements in dataGraph
+	// Values from generateInitialList will always work if the data has not been modified
+	// Values passed by hand might not be in the dataGraph
 	var rootQuery = self.outputResultSets[0];
 	for(var n in rootQuery.variables){
 		if(!initialBindings[n]) throw new Error('Expected variable '+JSON.stringify(n)+' to be bound');

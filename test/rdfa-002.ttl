@@ -1,0 +1,2 @@
+<http://example.com/> <http://purl.org/dc/terms/creator> "Mark Birbeck" .
+<http://example.com/> <http://xmlns.com/foaf/0.1/topic> <http://www.example.com/#us> .
