@@ -7,7 +7,6 @@ var XMLSerializer = require('xmldom').XMLSerializer;
 var DOMParser = require('xmldom').DOMParser;
 
 function templateFromFile(templateFilename){
-	// TODO: load this data in a before() clause
 	var templateFilepath = __dirname + '/' + templateFilename;
 	var templateContents = fs.readFileSync(templateFilepath, 'UTF-8');
 	var sz = new XMLSerializer;
@@ -45,12 +44,8 @@ function elements(list){
 		return e.nodeType==e.ELEMENT_NODE;
 	});
 }
-function tableCells(eTable){
-	return elements(eTable.getElementsByTagName('tr')).map(function(e){
-		return elements(e.childNodes);
-	});
-}
-describe("RDFa Core example 1", function(){
+
+describe("RDFa Core examples", function(){
 	it('002a', function(){
 		var doc = generateFilledDocument(
 			templateFromFile('rdfa-002a.html'),

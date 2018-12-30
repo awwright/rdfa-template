@@ -325,10 +325,26 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 					}
 				}
 			});
+			// attributes relative to the document base
+			[
+				'href',
+				'src',
+			].forEach(function(attributeName){
+				var patternName = attributeName + '-bind';
+				if(node.getAttribute && node.hasAttribute(patternName)){
+					var attributeValue = node.getAttribute(patternName);
+					if(rdfaContext.isVariable(attributeValue)){
+						var varname = rdfaContext.getVariable(attributeValue);
+						// TODO turn target into a relative URI Reference if possible
+						var target = bindingsNode.rdfaTemplateBindings[varname].toString();
+						node.setAttribute(attributeName, target);
+						node.removeAttribute(patternName);
+					}
+				}
+			});
 			// attributes that support full IRI
 			[
 				'about',
-				'href',
 				'property',
 				'rel',
 				'resource',
@@ -336,7 +352,6 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 				'typeof',
 				'datetime',
 				'content',
-				'src',
 			].forEach(function(attributeName){
 				var patternName = attributeName + '-bind';
 				if(node.getAttribute && node.hasAttribute(patternName)){
