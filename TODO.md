@@ -13,6 +13,7 @@
 * Variation where variables are filled with exactly one binding
 * Verify a document is constistent with a reference graph
 * Fill subqueries in a document with a recordset
+* Parse RDFa as it's output and ensure every generated triple does exist in the graph
 
 
 ## Test cases

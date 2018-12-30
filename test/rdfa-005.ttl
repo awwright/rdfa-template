@@ -1,0 +1,1 @@
+<http://example.com/root> <http://purl.org/dc/terms/title> "My home-page" .

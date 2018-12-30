@@ -116,4 +116,13 @@ describe("RDFa Core examples", function(){
 		assert.equal(links.length, 1);
 		assert.equal(links[0].getAttribute('href'), 'http://www.example.com/#us');
 	});
+	it('005a', function(){
+		var doc = generateTest(
+			templateFromFile('rdfa-005a.html'),
+			dataFromFile('rdfa-005.ttl'),
+		);
+		var e = elements(doc.getElementsByTagName('h1'));
+		assert.equal(e.length, 1);
+		assert.equal(e[0].textContent, 'My home-page');
+	});
 });
