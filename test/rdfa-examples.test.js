@@ -81,4 +81,34 @@ describe("RDFa Core example 1", function(){
 		var links = elements(doc.getElementsByTagName('link'));
 		assert.equal(links[0].getAttribute('href'), 'http://www.example.com/#us');
 	});
+	it('003a', function(){
+		var doc = generateFilledDocument(
+			templateFromFile('rdfa-003a.html'),
+			dataFromFile('rdfa-002.ttl'),
+		);
+		var metas = elements(doc.getElementsByTagName('meta'));
+		assert.equal(metas[0].getAttribute('content'), 'Mark Birbeck');
+		var links = elements(doc.getElementsByTagName('link'));
+		assert.equal(links[0].getAttribute('href'), 'http://www.example.com/#us');
+	});
+	it('003b', function(){
+		var doc = generateFilledDocument(
+			templateFromFile('rdfa-003b.html'),
+			dataFromFile('rdfa-002.ttl'),
+		);
+		var metas = elements(doc.getElementsByTagName('meta'));
+		assert.equal(metas[0].getAttribute('content'), 'Mark Birbeck');
+		var links = elements(doc.getElementsByTagName('link'));
+		assert.equal(links[0].getAttribute('href'), 'http://www.example.com/#us');
+	});
+	it('003c', function(){
+		var doc = generateTest(
+			templateFromFile('rdfa-003c.html'),
+			dataFromFile('rdfa-002.ttl'),
+		);
+		var metas = elements(doc.getElementsByTagName('meta'));
+		assert.equal(metas[0].getAttribute('content'), 'Mark Birbeck');
+		var links = elements(doc.getElementsByTagName('link'));
+		assert.equal(links[0].getAttribute('href'), 'http://www.example.com/#us');
+	});
 });
