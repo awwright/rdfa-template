@@ -23,4 +23,5 @@
 * An RDFa document with a statement not in the graph produces an empty record set.
 * An RDFa document with only statements in the graph produces a single record
 * An RDFa document with a pattern produces a record for each match
+* Verify that all variables in the file are bound
 

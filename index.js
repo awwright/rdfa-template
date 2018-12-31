@@ -1,6 +1,5 @@
 
 var rdf = require('rdf');
-var TriplePattern = rdf.TriplePattern;
 var rdfa = require('rdfa');
 var evaluateQuery = require('./lib/query.js').evaluateQuery;
 
@@ -89,6 +88,8 @@ function RDFaTemplateParser(base, document){
 	rdfa.RDFaParser.apply(this, arguments);
 	this.template = document;
 	this.outputResultSets = [];
+	// Set contextList to an Array so it will save every RDFa context in the order it encounters them
+	this.contextList = [];
 	this.nodeContextMap = new Map;
 	this.outputPattern = new Query(document, null);
 	this.outputPattern.id = this.outputResultSets.length;
@@ -255,14 +256,24 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 		if(!initialBindings[n]) throw new Error('Expected variable '+JSON.stringify(n)+' to be bound');
 	}
 	output.rdfaTemplateBindings = initialBindings;
-	var node=template, clone=output;
 	// Make a copy of the array but skip the first query;
 	// bindings for this top-level query must be provided in initialBindings.
 	var outputResultSets = self.outputResultSets.slice(1);
+	// Also make a copy of the contextList and recover the mapping of nodes => RDFaTemplateContext instances
+	// Trim off the first context which is above the document node
+	var contextList = self.contextList.slice(1);
 	// Copy query information
-	while(node && outputResultSets.length){
-		if(node===outputResultSets[0].node){
+	var node=template, clone=output;
+	while(node && node!==template.nextSibling && node!==template.parentNode){
+		if(outputResultSets[0] && node===outputResultSets[0].node){
 			clone.rdfaTemplateQuery = outputResultSets.shift();
+		}
+		if(contextList[0] && node===contextList[0].node){
+			clone.rdfaTemplateContext = contextList.shift();
+		}else if(node.nodeType==node.ELEMENT_NODE){
+			console.error(node.localName);
+			console.error(contextList.map(function(e){return e.node.localName;}));
+			throw new Error('Unknown node');
 		}
 		if(node.firstChild){
 			node=node.firstChild, clone=clone.firstChild;
@@ -270,6 +281,12 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 			while(node && !node.nextSibling) node=node.parentNode, clone=clone.parentNode;
 			if(node) node=node.nextSibling, clone=clone.nextSibling;
 		}
+	}
+	if(outputResultSets.length){
+		throw new Error('Could not find all outputResultSets nodes');
+	}
+	if(contextList.length){
+		throw new Error('Could not find all contextList nodes');
 	}
 	// Now process the copy
 	var node = output;
@@ -294,9 +311,19 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 			var resultset = query.evaluate(dataGraph, bindingsNode.rdfaTemplateBindings);
 			resultset.forEach(function(record, i){
 				var newItem = itemTemplate.cloneNode(true);
+				// Recursively copy the rdfaTemplateQuery, rdfaTemplateContext properties
+				for(var n=itemTemplate, m=newItem; n!==itemTemplate.nextSibling && n!==itemTemplate.parentNode;){
+					m.rdfaTemplateQuery = n.rdfaTemplateQuery;
+					m.rdfaTemplateContext = n.rdfaTemplateContext;
+					if(n.firstChild){
+						n = n.firstChild, m = m.firstChild;
+					}else{
+						while(n && !n.nextSibling) n = n.parentNode, m = m.parentNode;
+						if(n) n = n.nextSibling, m = m.nextSibling;
+					}
+				}
 				newItem.rdfaTemplateQuery = null;
 				newItem.rdfaTemplateBindings = record;
-				newItem.rdfaTemplateElement = itemTemplate;
 				newItem.removeAttribute('subquery');
 				newItem.removeAttribute('subquery-order');
 				newItem.setAttribute('subquery-i', i.toString());
@@ -322,6 +349,9 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 						var varname = rdfaContext.getVariable(attributeValue);
 						node.setAttribute(attributeName, bindingsNode.rdfaTemplateBindings[varname].toString());
 						node.removeAttribute(patternName);
+					}else{
+						node.setAttribute(attributeName, attributeValue);
+						node.removeAttribute(patternName);
 					}
 				}
 			});
@@ -335,9 +365,18 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 					var attributeValue = node.getAttribute(patternName);
 					if(rdfaContext.isVariable(attributeValue)){
 						var varname = rdfaContext.getVariable(attributeValue);
-						// TODO turn target into a relative URI Reference if possible
 						var target = bindingsNode.rdfaTemplateBindings[varname].toString();
-						node.setAttribute(attributeName, target);
+						var base = node.rdfaTemplateContext.base;
+						// TODO Use a library to produce a relative URI Reference if possible
+						var match = base.match(/^(([^:\/?#]+):)?(\/\/([^\/?#]*))?/);
+						if(match && match[0]==target.substring(0, match[0].length)){
+							node.setAttribute(attributeName, target.substring(match[0].length))
+						}else{
+							node.setAttribute(attributeName, target);
+						}
+						node.removeAttribute(patternName);
+					}else{
+						node.setAttribute(attributeName, attributeValue);
 						node.removeAttribute(patternName);
 					}
 				}
@@ -359,6 +398,9 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 					if(rdfaContext.isVariable(attributeValue)){
 						var varname = rdfaContext.getVariable(attributeValue);
 						node.setAttribute(attributeName, bindingsNode.rdfaTemplateBindings[varname].toString());
+						node.removeAttribute(patternName);
+					}else{
+						node.setAttribute(attributeName, attributeValue);
 						node.removeAttribute(patternName);
 					}
 				}
