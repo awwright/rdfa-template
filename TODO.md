@@ -14,6 +14,7 @@
 * Verify a document is constistent with a reference graph
 * Fill subqueries in a document with a recordset
 * Parse RDFa as it's output and ensure every generated triple does exist in the graph
+* Collapse full URIs into CURIE, term, or URI Reference forms if desired and where possible.
 
 
 ## Test cases
