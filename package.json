@@ -11,7 +11,7 @@
   "author": "Austin Wright",
   "license": "Unlicense",
   "dependencies": {
-    "rdfa": "^0.0.7",
+    "rdfa": "^0.0.8",
     "xmldom": "^0.1.27"
   },
   "devDependencies": {
