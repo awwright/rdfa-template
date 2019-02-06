@@ -2,11 +2,13 @@
 
 Fill variables on an RDFa page with data from an RDF graph.
 
-Guarentees that the generated RDFa document will contain triples also present in the source graph.
+Guarentees that the generated RDFa document will contain data also present in the source graph.
+
+An RDFa template document is first compiled into one or more queries: one top query, and any additional subqueries nested within other queries.
+The top-level query is filled out into any number of documents; if the top-level query has zero variables to expand, it's filled out into exactly one document (because the multiplicative identity is one).
+In each of these documents, subqueries may be attached to elements, which are cloned for every subquery result. Subqueries may refer to variables from higher-level queries.
 
 ## Features
-
-Note: API is subject to change
 
 ### Generate a graph query from placeholders in an RDFa document
 
@@ -20,7 +22,7 @@ parser.outputResultSets.forEach(function(v){
 });
 ```
 
-### Generate a recordset of documents with top-level variables
+### Generate a recordset of documents given a top-level query
 
 Documents may have variables that are filled in to match statements in the graph. The resulting document will produce RDF that exists in the database.
 
@@ -47,7 +49,7 @@ const filledDOM = template.parser.generateDocument(template.document, dataGraph,
 ```
 
 
-### Fill variables in a document
+### Fill variables in a document given top-level query bindings
 
 Documents may have variables that are filled in to match statements in the graph. The resulting document will produce RDF that exists in the database.
 
