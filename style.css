@@ -1,0 +1,12 @@
+/*
+#show-hide-main-content + div {
+    display: none;
+}
+#show-hide-main-content:checked + div {
+    display: block;
+}
+*/
+textarea {
+    width: 100%;
+    height: 20em;
+}

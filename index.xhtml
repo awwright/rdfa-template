@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr">
+	<head>
+		<meta charset="UTF-8" />
+		<title>rdfa-template</title>
+		<script type="application/ecmascript" src="app.js"></script>
+		<link rel="stylesheet" type="text/css" href="style.css"/>
+	</head>
+	<body>
+		<section id="data">
+			<h2>Data</h2>
+			<div><textarea id="turtle-document">
+@prefix rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: &lt;http://www.w3.org/2000/01/rdf-schema#> .
+@prefix foaf: &lt;http://xmlns.com/foaf/0.1/> .
+@base &lt;http://example.com/> .
+
+&lt;#a>
+	a foaf:Person ;
+	foaf:name "Alice" ;
+	foaf:homepage &lt;http://example.com/~a> ;
+	foaf:nick "a" ;
+	foaf:knows &lt;#b> .
+
+&lt;#b>
+	a foaf:Person ;
+	foaf:name "Bob" ;
+	foaf:homepage &lt;http://example.com/~b> ;
+	foaf:nick "b" ;
+	foaf:knows &lt;#b> .
+
+&lt;#c>
+	a foaf:Person ;
+	foaf:name "Charlie" ;
+	foaf:homepage &lt;http://example.com/~c> ;
+	foaf:nick "c" ;
+	foaf:knows &lt;#c> .
+</textarea></div>
+	</section>
+		<h2>Template</h2>
+		<p>You can edit this in your Developer console too.</p>
+		<!-- <input type="checkbox" id="show-hide-main-content" /> -->
+		<div id="main-content">
+			<table class="table-http-headers" vocab="http://xmlns.com/foaf/0.1/">
+				<thead>
+					<tr><th>Name</th><th>Homepage</th><th>Nickname</th></tr>
+				</thead>
+				<tbody>
+					<tr subquery="each" subquery-order="?name" typeof="{?type}">
+						<td><span property="name">{?name}</span></td>
+						<td><a property="homepage" href-bind="{?homepage}">{?homepage}</a></td>
+						<td property="nick">{?nick}</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<h2>Output</h2>
+		<div><button id="do-render-content">Render</button></div>
+		<div id="render-content"></div>
+	</body>
+</html>
