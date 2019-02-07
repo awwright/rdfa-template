@@ -16,6 +16,9 @@ function onLoad(){
     document.getElementById('turtle-document').addEventListener('change', function(){
         processGraph();
     });
+    document.getElementById('do-render-content').addEventListener('click', function(){
+        processGraph();
+    });
     processGraph();
 }
 
