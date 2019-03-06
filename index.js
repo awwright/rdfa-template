@@ -2,6 +2,7 @@
 var rdf = require('rdf');
 var rdfa = require('rdfa');
 var evaluateQuery = require('./lib/query.js').evaluateQuery;
+var parseOrderCondition = require('./lib/parseOrderCondition.js').parseOrderCondition;
 
 exports.parse = parse;
 function parse(base, document, options){
@@ -54,9 +55,7 @@ RDFaTemplateContext.prototype.child = function child(node){
 		this.outputPattern.queries.push(ctx.outputPattern);
 	}else if(node.getAttribute && node.getAttribute('subquery')==='each'){
 		if(node.hasAttribute('subquery-order')){
-			var order = node.getAttribute('subquery-order').split(/\s+/g).map(function(v){
-				return {expression: v};
-			});
+			var order = parseOrderCondition(node.getAttribute('subquery-order'));
 		}
 		ctx.outputPattern = new Query(node, this.outputPattern, order);
 		ctx.outputPattern.id = this.parser.outputResultSets.length;
