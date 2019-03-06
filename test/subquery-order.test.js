@@ -21,7 +21,7 @@ var dataContents = fs.readFileSync(dataFilename, 'UTF-8');
 var dataParse = rdf.TurtleParser.parse(dataContents, baseIRI);
 var dataGraph = dataParse.graph;
 
-describe("0002", function(){
+describe("subquery-order", function(){
 	it("genreateDocument ?name", function(){
 		document.getElementById('q').setAttribute('subquery-order', '?name');
 		assert.equal(document.getElementById('q').getAttribute('subquery'), 'each');
