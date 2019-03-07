@@ -20,8 +20,8 @@ var dataGraph = new rdf.Graph();
 
 describe("0003", function(){
     it("genreateDocument: no results on empty input", function(){
-        var result = parse(baseIRI, document);
-        var rdoc = result.parser.generateDocument(result.document, dataGraph);
+        var generator = parse(baseIRI, document);
+        var rdoc = generator.fillSingle(dataGraph);
         var eBody = rdoc.documentElement.childNodes[3];
         assert.equal(eBody.nodeName, 'body');
         var eMain = rdoc.getElementById('main-content');

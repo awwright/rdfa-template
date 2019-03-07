@@ -31,10 +31,10 @@ describe("0001", function(){
         assert(result.outputPattern);
         assert(result.processorGraph);
     });
-    it("outputResultSets", function(){
+    it("queries", function(){
         var result = parse(baseIRI, document);
         // TODO: verify the string is actually correct
-        assert.equal(result.parser.outputResultSets.toString(),
+        assert.equal(result.parser.queries.toString(),
             'SELECT * {\n' +
             '\t# Block 0\n' +
             '}\n' +
@@ -50,7 +50,7 @@ describe("0001", function(){
     });
     it("genreateDocument", function(){
         var result = parse(baseIRI, document);
-        var rdoc = result.parser.generateDocument(result.document, dataGraph);
+        var rdoc = result.fillSingle(dataGraph);
         var eBody = rdoc.documentElement.childNodes[3];
         assert.equal(eBody.nodeName, 'body');
         var eMain = rdoc.getElementById('main-content');

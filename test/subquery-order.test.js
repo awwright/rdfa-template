@@ -27,8 +27,8 @@ describe("subquery-order", function(){
 		assert.equal(document.getElementById('q').getAttribute('subquery'), 'each');
 		// Check that the value we just set is in the test title
 		assert(this.test.title.indexOf(document.getElementById('q').getAttribute('subquery-order')) >= 0);
-		var result = parse(baseIRI, document);
-		var rdoc = result.parser.generateDocument(result.document, dataGraph);
+		var generator = parse(baseIRI, document);
+		var rdoc = generator.fillSingle(dataGraph);
 		// modify the subquery-order to sort ascending (default)
 		var eBody = rdoc.documentElement.childNodes[3];
 		assert.equal(eBody.nodeName, 'body');
@@ -46,8 +46,8 @@ describe("subquery-order", function(){
 		assert.equal(document.getElementById('q').getAttribute('subquery'), 'each');
 		// Check that the value we just set is in the test title
 		assert(this.test.title.indexOf(document.getElementById('q').getAttribute('subquery-order')) >= 0);
-		var result = parse(baseIRI, document);
-		var rdoc = result.parser.generateDocument(result.document, dataGraph);
+		var generator = parse(baseIRI, document);
+		var rdoc = generator.fillSingle(dataGraph);
 		// modify the subquery-order to sort ascending (default)
 		var eBody = rdoc.documentElement.childNodes[3];
 		assert.equal(eBody.nodeName, 'body');
@@ -62,11 +62,11 @@ describe("subquery-order", function(){
 	});
 	it("genreateDocument DESC(?name)", function(){
 		document.getElementById('q').setAttribute('subquery-order', 'DESC(?name)');
-		var result = parse(baseIRI, document);
-		assert.equal(result.document.getElementById('q').getAttribute('subquery'), 'each');
+		var generator = parse(baseIRI, document);
+		assert.equal(generator.document.getElementById('q').getAttribute('subquery'), 'each');
 		// Check that the value we just set is in the test title
 		assert(this.test.title.indexOf(document.getElementById('q').getAttribute('subquery-order')) >= 0);
-		var rdoc = result.parser.generateDocument(result.document, dataGraph);
+		var rdoc = generator.fillSingle(dataGraph);
 		// modify the subquery-order to sort descending (z->a)
 		var eBody = rdoc.documentElement.childNodes[3];
 		assert.equal(eBody.nodeName, 'body');

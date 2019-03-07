@@ -19,13 +19,68 @@ function parse(base, document, options){
 
 	parser.walkDocument(document);
 	
-	return {
-		document: document,
-		parser: parser,
-		outputGraph: parser.outputGraph,
-		outputPattern: parser.outputPattern,
-		processorGraph: parser.processorGraph,
-	};
+	var generator = new DocumentGenerator;
+	generator.document = document;
+	generator.parser = parser;
+	generator.outputGraph = parser.outputGraph;
+	generator.outputPattern = parser.outputPattern;
+	generator.processorGraph = parser.processorGraph;
+	generator.topQuery = parser.queries[0];
+	return generator;
+}
+
+module.exports.DocumentGenerator = DocumentGenerator;
+function DocumentGenerator(){
+}
+
+// Execute the first query on the template over the provided dataGraph
+// The returned records are suitable for providing to fillSingle for filling the entire top level of a single document
+DocumentGenerator.prototype.evaluate = function evaluate(db, bindings){
+	var self = this;
+	var query = self.parser.queries[0];
+	var resultset = query.evaluate(db, bindings);
+	return resultset;
+}
+
+DocumentGenerator.prototype.data = function data(bindings){
+	var self = this;
+	if(!bindings) bindings = {};
+	var g = new rdf.Graph;
+	function filterValue(v){
+		if(v.termType=='Variable') return !!bindings[v];
+		return true;
+	}
+	function mapValue(v){
+		if(v.termType=='Variable'){
+			return bindings[v];
+		}else if(v.termType=='BlankNode' && bindings[v]){
+			return bindings[v];
+		}else{
+			return v;
+		}
+	}
+	self.parser.queries[0].statements.filter(function(pattern){
+		return mapValue(pattern.subject) && mapValue(pattern.predicate) && mapValue(pattern.object);
+	}).forEach(function(pattern){
+		g.add(new rdf.Triple(
+			mapValue(pattern.subject),
+			mapValue(pattern.predicate),
+			mapValue(pattern.object),
+		));
+	});
+	return g;
+}
+
+DocumentGenerator.prototype.fillRecordset = function fillRecordset(db, bindings){
+	var self = this;
+	return self.evaluate(db, bindings).map(function(v){
+		return self.fillSingle(db, v);
+	});
+}
+
+DocumentGenerator.prototype.fillSingle = function fillSingle(db, bindings){
+	// TODO: ensure that every variable in `this.parser` has a mapping in `bindings`
+	return this.parser.generateDocument(this.document, db, bindings);
 }
 
 rdfa.inherits(RDFaTemplateContext, rdfa.RDFaContext);
@@ -49,19 +104,19 @@ RDFaTemplateContext.prototype.child = function child(node){
 	var ctx = rdfa.RDFaContext.prototype.child.apply(this, arguments);
 	if(node.getAttribute && node.getAttribute('subquery')==='optional'){
 		ctx.outputPattern = new Query(node, this.outputPattern);
-		ctx.outputPattern.id = this.parser.outputResultSets.length;
-		this.parser.outputResultSets.push(ctx.outputPattern);
+		ctx.outputPattern.id = this.parser.queries.length;
+		this.parser.queries.push(ctx.outputPattern);
 		ctx.outputPattern.optional = true;
-		this.outputPattern.queries.push(ctx.outputPattern);
+		this.outputPattern.subqueries.push(ctx.outputPattern);
 	}else if(node.getAttribute && node.getAttribute('subquery')==='each'){
 		if(node.hasAttribute('subquery-order')){
 			var order = parseOrderCondition(node.getAttribute('subquery-order'));
 		}
 		ctx.outputPattern = new Query(node, this.outputPattern, order);
-		ctx.outputPattern.id = this.parser.outputResultSets.length;
-		this.parser.outputResultSets.push(ctx.outputPattern);
+		ctx.outputPattern.id = this.parser.queries.length;
+		this.parser.queries.push(ctx.outputPattern);
 		ctx.outputPattern.each = true;
-		this.outputPattern.queries.push(ctx.outputPattern);
+		this.outputPattern.subqueries.push(ctx.outputPattern);
 	}else{
 		ctx.outputPattern = this.outputPattern;
 	}
@@ -86,13 +141,13 @@ rdfa.inherits(RDFaTemplateParser, rdfa.RDFaParser);
 function RDFaTemplateParser(base, document){
 	rdfa.RDFaParser.apply(this, arguments);
 	this.template = document;
-	this.outputResultSets = [];
+	this.queries = [];
 	// Set contextList to an Array so it will save every RDFa context in the order it encounters them
 	this.contextList = [];
 	this.nodeContextMap = new Map;
 	this.outputPattern = new Query(document, null);
-	this.outputPattern.id = this.outputResultSets.length;
-	this.outputResultSets.push(this.outputPattern);
+	this.outputPattern.id = this.queries.length;
+	this.queries.push(this.outputPattern);
 	this.outputPattern.root = true;
 	this.emitUsesVocabulary = false;
 }
@@ -234,38 +289,29 @@ RDFaTemplateParser.prototype.emit = function emit(s, p, o){
 	ctx.outputPattern.add(new rdf.TriplePattern(s, p, o));
 }
 
-// Execute the first query on the template over the provided dataGraph
-// The returned records are suitable for providing to generateDocument for completing the record set
-RDFaTemplateParser.prototype.generateInitialList = function generateInitialList(dataGraph, initialBindings){
-	var self = this;
-	var query = self.outputResultSets[0];
-	var resultset = query.evaluate(dataGraph, initialBindings);
-	return resultset;
-}
-
 RDFaTemplateParser.prototype.generateDocument = function generateDocument(template, dataGraph, initialBindings){
 	var self = this;
 	var output = template.cloneNode(true);
 	initialBindings = initialBindings || {};
 	// TODO: verify that initialBindings produces statements in dataGraph
-	// Values from generateInitialList will always work if the data has not been modified
+	// Values from evaluate will always work if the data has not been modified
 	// Values passed by hand might not be in the dataGraph
-	var rootQuery = self.outputResultSets[0];
+	var rootQuery = self.queries[0];
 	for(var n in rootQuery.variables){
 		if(!initialBindings[n]) throw new Error('Expected variable '+JSON.stringify(n)+' to be bound');
 	}
 	output.rdfaTemplateBindings = initialBindings;
 	// Make a copy of the array but skip the first query;
 	// bindings for this top-level query must be provided in initialBindings.
-	var outputResultSets = self.outputResultSets.slice(1);
+	var queries = self.queries.slice(1);
 	// Also make a copy of the contextList and recover the mapping of nodes => RDFaTemplateContext instances
 	// Trim off the first context which is above the document node
 	var contextList = self.contextList.slice(1);
 	// Copy query information
 	var node=template, clone=output;
 	while(node && node!==template.nextSibling && node!==template.parentNode){
-		if(outputResultSets[0] && node===outputResultSets[0].node){
-			clone.rdfaTemplateQuery = outputResultSets.shift();
+		if(queries[0] && node===queries[0].node){
+			clone.rdfaTemplateQuery = queries.shift();
 		}
 		if(contextList[0] && node===contextList[0].node){
 			clone.rdfaTemplateContext = contextList.shift();
@@ -281,8 +327,8 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 			if(node) node=node.nextSibling, clone=clone.nextSibling;
 		}
 	}
-	if(outputResultSets.length){
-		throw new Error('Could not find all outputResultSets nodes');
+	if(queries.length){
+		throw new Error('Could not find all queries nodes');
 	}
 	if(contextList.length){
 		throw new Error('Could not find all contextList nodes');
@@ -328,6 +374,7 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 				newItem.setAttribute('subquery-i', i.toString());
 				parentNode.insertBefore(newItem, nextSibling);
 			});
+			//parentNode.insertBefore(nextSibling.ownerDocument.createComment('\n'+query.toString()+'\nresult count = '+resultset.length+'\n'), nextSibling);
 			// Forward to the first inserted item, or otherwise the next element after the template
 			while(node && !node.nextSibling) node = node.parentNode;
 			if(node) node = node.nextSibling;
@@ -429,7 +476,7 @@ function Query(node, parent, order, limit, offset){
 	this.node = node;
 	this.parent = parent;
 	this.statements = [];
-	this.queries = [];
+	this.subqueries = [];
 	this.variables = {};
 	this.optional = false;
 	if(order===undefined || order===null) order = [];
@@ -451,7 +498,7 @@ Query.prototype.toStringAll = function toStringAll(){
 	for(var padding='', e=this; e.parent; e=e.parent) padding+='\t';
 	
 	str += this.statements.map(function(v){ return padding + "\t" + v.toString() + '\n'; }).join('');
-	str += this.queries.map(function(v){ return padding + "\t" + v.toString() + '\n'; }).join('');
+	str += this.subqueries.map(function(v){ return padding + "\t" + v.toString() + '\n'; }).join('');
 
 	if(this.root){
 		str = 'SELECT * {\n' + str + padding + '}\n';

@@ -35,8 +35,8 @@ function processGraph(){
         e.parentNode.removeChild(e);
     });
     var renderRoot = document.getElementById('render-content');
-    var result = parse(baseIRI, templateRoot);
-    var rdoc = result.parser.generateDocument(result.document, dataGraph);
+    var generator = parse(baseIRI, templateRoot);
+    var rdoc = generator.fillSingle(dataGraph);
     while(renderRoot.firstChild) renderRoot.removeChild(renderRoot.firstChild);
     renderRoot.appendChild(rdoc.getElementById('main-content'));
 }

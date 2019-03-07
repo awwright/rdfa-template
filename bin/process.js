@@ -39,13 +39,13 @@ console.error(dataGraph.toArray().map(function(t){ return t.toString()+'\n'; }).
 console.error('Query:');
 console.error(result.outputPattern.toString());
 console.error('Recordset:');
-result.parser.outputResultSets.forEach(function(query, i){
+result.parser.queries.forEach(function(query, i){
 	console.error('======');
 	console.error('RecordSet '+query.id, i);
 	console.error(query.toString());
 	console.error(query.evaluate(dataGraph));
 });
 console.error('Output:');
-console.log(sz.serializeToString(result.parser.generateDocument(result.document, dataGraph)));
+console.log(sz.serializeToString(result.fillSingle(dataGraph)));
 
 

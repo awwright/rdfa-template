@@ -15,6 +15,11 @@
 * Fill subqueries in a document with a recordset
 * Parse RDFa as it's output and ensure every generated triple does exist in the graph
 * Collapse full URIs into CURIE, term, or URI Reference forms if desired and where possible.
+* Specify output formatting for generated elements:
+	* Sorting a result set
+	* Whitespace handling
+	* Generating arbitrary text (that doesn't generate an RDF statement)
+	* Filtering of results
 
 
 ## Test cases

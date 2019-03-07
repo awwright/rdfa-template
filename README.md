@@ -17,16 +17,16 @@ Use `rdfat.parse(baseIRI, template)` to parse a given DOM document `template`:
 ```javascript
 const parse = require('rdfa-template').parse;
 const tpl = parse(document.location.toString(), document);
-parser.outputResultSets.forEach(function(v){
+parser.queries.forEach(function(v){
 	console.log(v.toString());
 });
 ```
 
 ### Generate a recordset of documents given a top-level query
 
-Documents may have variables that are filled in to match statements in the graph. The resulting document will produce RDF that exists in the database.
+Documents may have variables that are filled in to match statements in the graph. The resulting document will produce only RDF data that exists in the database.
 
-Use the `RDFaTemplateParser#generateInitialList` call to get this record set of variable bindings:
+Use the `RDFaTemplateParser#evaluate` call to get this record set of variable bindings:
 
 ```xml
 <html
@@ -43,9 +43,9 @@ Use the `RDFaTemplateParser#generateInitialList` call to get this record set of 
 ```javascript
 const baseIRI = 'http://example.com/';
 const template = parse(baseIRI, templateDocument);
-const recordSet = template.parser.generateInitialList(dataGraph, {});
-assert.equal(recordSet.length, 1);
-const filledDOM = template.parser.generateDocument(template.document, dataGraph, recordSet[0]);
+const recordset = template.evaluate(dataGraph, {});
+assert.equal(recordset.length, 1);
+const filledDOM = template.fillSingle(dataGraph, recordset[0]);
 ```
 
 
@@ -53,15 +53,13 @@ const filledDOM = template.parser.generateDocument(template.document, dataGraph,
 
 Documents may have variables that are filled in to match statements in the graph. The resulting document will produce RDF that exists in the database.
 
-Use the `RDFaTemplateParser#generateInitialList` call to get this record set of variable bindings:
+Use the `RDFaTemplateParser#evaluate` call to get this record set of variable bindings:
 
 
 ```javascript
 const baseIRI = 'http://example.com/';
 const template = parse(baseIRI, templateDocument);
-const documentList = template.parser.generateInitialList(dataGraph, {}).map(function(bindings){
-	return template.parser.generateDocument(template.document, dataGraph, bindings);
-});
+const documentList = template.fillRecordset(dataGraph, {});
 ```
 
 

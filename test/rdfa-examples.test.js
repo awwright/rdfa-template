@@ -33,7 +33,7 @@ function generateTest(template, dataGraph, baseIRI, bindings){
 function generateFilledDocument(templateDocument, dataGraph, baseIRI, bindings){
 	if(!baseIRI) baseIRI = 'http://example.com/';
 	var template = parse(baseIRI, templateDocument);
-	var recordSet = template.parser.generateInitialList(dataGraph, {});
+	var recordSet = template.evaluate(dataGraph, {});
 	assert.equal(recordSet.length, 1);
 	var rendered = template.parser.generateDocument(template.document, dataGraph, recordSet[0]);
 	return rendered;
