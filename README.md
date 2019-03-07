@@ -83,6 +83,58 @@ Use `subquery="each"` to repeat that element multiple times for each match:
 If multiple values for the "related" link are specified in the graph, this will output the element multiple times, one for every match.
 
 
+## Interface
+
+### parse(base, document, options)
+
+* base: URI base of document (location where document was downloaded)
+* document: DOM document
+* options: object with some settings (none yet)
+
+Returns: DocumentGenerator (see below)
+
+
+### DocumentGenerator#evaluate(db, bindings)
+
+* db: Graph/Dataset object
+* bindings: list of variable bindings to apply
+
+Returns an array of variable bindings for the the top-level query in the document, run against `db`.
+
+If there are no variables, returns a single empty result.
+
+If `bindings` is supplied, results are filtered (that is, query is initialized with given bindings).
+
+
+### DocumentGenerator#data(bindings)
+
+* bindings: optional list of variable bindings to apply
+
+Returns a list of the RDF statements that can be extracted from the document.
+
+If any variables in `bindings` are specified, they will be used to generate additional RDF statements.
+
+
+### DocumentGenerator#fillRecordset(db, bindings)
+
+* db: Graph/Dataset object
+* bindings: list of variable bindings to apply
+
+Returns an array of documents that match.
+
+In cases where there's no variables in the top-level query, this will return a single document.
+
+This is the same thing as first calling `evaluate` then mapping the result set through `fillSingle`.
+
+
+### DocumentGenerator#fillSingle(db, bindings)
+
+* db: Graph/Dataset object
+* bindings: list of variable bindings to apply
+
+Returns a document with values from `db` after applying `bindings` to variables.
+
+
 ## Tests
 
 Run `mocha` to run tests.
