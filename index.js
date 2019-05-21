@@ -123,7 +123,6 @@ RDFaTemplateContext.prototype.fromTERMorCURIEorAbsIRI = function fromTERMorCURIE
 
 rdfa.inherits(RDFaTemplateParser, rdfa.RDFaParser);
 function RDFaTemplateParser(base, document){
-	rdfa.RDFaParser.apply(this, arguments);
 	this.template = document;
 	this.queries = [];
 	// Set contextList to an Array so it will save every RDFa context in the order it encounters them
@@ -141,6 +140,7 @@ exports.parserFrom = function RDFaTemplateParser_from(RDFaSuper){
 		throw new Error('Expected `RDFaSuper` to be a subclass of RDFaParser');
 	}
 	function RDFaTemplateParser_(base, document){
+		RDFaSuper.apply(this, arguments);
 		RDFaTemplateParser.call(this, base, document);
 	}
 	rdfa.inherits(RDFaTemplateParser_, RDFaSuper);
