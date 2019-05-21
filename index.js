@@ -4,31 +4,6 @@ var rdfa = require('rdfa');
 var evaluateQuery = require('./lib/query.js').evaluateQuery;
 var parseOrderCondition = require('./lib/parseOrderCondition.js').parseOrderCondition;
 
-exports.parse = parse;
-function parse(base, document, options){
-	var self = this;
-	if(typeof base!=='string') throw new Error('Expected `base` to be a string');
-	if(typeof document!=='object') throw new Error('Unexpected argument');
-	if(typeof options==='object'){
-	}
-	var parser = new RDFaTemplateParser(base, document);
-
-	if(typeof options==='object'){
-		if(options.rdfenv) parser.rdfenv = options.rdfenv;
-	}
-
-	parser.walkDocument(document);
-	
-	var generator = new DocumentGenerator;
-	generator.document = document;
-	generator.parser = parser;
-	generator.outputGraph = parser.outputGraph;
-	generator.outputPattern = parser.outputPattern;
-	generator.processorGraph = parser.processorGraph;
-	generator.topQuery = parser.queries[0];
-	return generator;
-}
-
 module.exports.DocumentGenerator = DocumentGenerator;
 function DocumentGenerator(){
 }
@@ -150,6 +125,33 @@ function RDFaTemplateParser(base, document){
 	this.queries.push(this.outputPattern);
 	this.outputPattern.root = true;
 	this.emitUsesVocabulary = false;
+}
+
+exports.parserFrom = function RDFaTemplateParser_from(RDFaSuper){
+	function RDFaTemplateParser_(base, document){
+		RDFaTemplateParser.call(this, base, document);
+	}
+	rdfa.inherits(RDFaTemplateParser_, RDFaSuper);
+	return function parse(base, document, options){
+		if(typeof base!=='string') throw new Error('Expected `base` to be a string');
+		if(typeof document!=='object') throw new Error('Unexpected argument');
+		if(typeof options==='object'){
+		}
+		var parser = new RDFaTemplateParser(base, document);
+
+		if(typeof options==='object'){
+			if(options.rdfenv) parser.rdfenv = options.rdfenv;
+		}
+		parser.walkDocument(document);
+		var generator = new DocumentGenerator;
+		generator.document = document;
+		generator.parser = parser;
+		generator.outputGraph = parser.outputGraph;
+		generator.outputPattern = parser.outputPattern;
+		generator.processorGraph = parser.processorGraph;
+		generator.topQuery = parser.queries[0];
+		return generator;
+	};
 }
 
 RDFaTemplateParser.prototype.RDFaContext = RDFaTemplateContext;

@@ -15,7 +15,7 @@ In each of these documents, subqueries may be attached to elements, which are cl
 Use `rdfat.parse(baseIRI, template)` to parse a given DOM document `template`:
 
 ```javascript
-const parse = require('rdfa-template').parse;
+const parse = require('rdfa-template').parserFrom(require('rdfa').RDFaXMLParser);
 const tpl = parse(document.location.toString(), document);
 parser.queries.forEach(function(v){
 	console.log(v.toString());
@@ -85,7 +85,20 @@ If multiple values for the "related" link are specified in the graph, this will 
 
 ## Interface
 
-### parse(base, document, options)
+### parserFrom(RDFaSuper)
+
+Generate a parser following the rules defined by the given RDFaParser `RDFaSuper`. Returns a parse function with the `<parse>` interface below.
+
+This can typically be used like:
+
+```javascript
+const rdfa = require('rdfa');
+const rdfaParserFrom = require('rdfa-template').parserFrom;
+const parse = rdfaParserFrom(rdfa.RDFaXMLParser);
+```
+
+
+### <parse>(base, document, options)
 
 * base: URI base of document (location where document was downloaded)
 * document: DOM document
