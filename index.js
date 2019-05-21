@@ -5,7 +5,16 @@ var evaluateQuery = require('./lib/query.js').evaluateQuery;
 var parseOrderCondition = require('./lib/parseOrderCondition.js').parseOrderCondition;
 
 module.exports.DocumentGenerator = DocumentGenerator;
-function DocumentGenerator(){
+function DocumentGenerator(document, parser){
+	if(!(parser instanceof rdfa.RDFaParser)){
+		throw new Error('Expected `parser` to be instanceof RDFaParser');
+	}
+	this.document = document;
+	this.parser = parser;
+	this.outputGraph = parser.outputGraph;
+	this.outputPattern = parser.outputPattern;
+	this.processorGraph = parser.processorGraph;
+	this.topQuery = parser.queries[0];
 }
 
 // Execute the first query on the template over the provided dataGraph
@@ -128,29 +137,27 @@ function RDFaTemplateParser(base, document){
 }
 
 exports.parserFrom = function RDFaTemplateParser_from(RDFaSuper){
+	if(!(RDFaSuper.prototype instanceof rdfa.RDFaParser)){
+		throw new Error('Expected `RDFaSuper` to be a subclass of RDFaParser');
+	}
 	function RDFaTemplateParser_(base, document){
 		RDFaTemplateParser.call(this, base, document);
 	}
 	rdfa.inherits(RDFaTemplateParser_, RDFaSuper);
+	for(var k in RDFaTemplateParser.prototype){
+		RDFaTemplateParser_.prototype[k] = RDFaTemplateParser.prototype[k];
+	}
 	return function parse(base, document, options){
 		if(typeof base!=='string') throw new Error('Expected `base` to be a string');
 		if(typeof document!=='object') throw new Error('Unexpected argument');
 		if(typeof options==='object'){
 		}
-		var parser = new RDFaTemplateParser(base, document);
-
+		var parser = new RDFaTemplateParser_(base, document);
 		if(typeof options==='object'){
 			if(options.rdfenv) parser.rdfenv = options.rdfenv;
 		}
 		parser.walkDocument(document);
-		var generator = new DocumentGenerator;
-		generator.document = document;
-		generator.parser = parser;
-		generator.outputGraph = parser.outputGraph;
-		generator.outputPattern = parser.outputPattern;
-		generator.processorGraph = parser.processorGraph;
-		generator.topQuery = parser.queries[0];
-		return generator;
+		return new DocumentGenerator(document, parser);
 	};
 }
 
