@@ -24,10 +24,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/awwright/node-rdfa-template.git"
+    "url": "git+https://github.com/awwright/rdfa-template.git"
   },
   "bugs": {
-    "url": "https://github.com/awwright/node-rdfa-template/issues"
+    "url": "https://github.com/awwright/rdfa-template/issues"
   },
-  "homepage": "https://github.com/awwright/node-rdfa-template#readme"
+  "homepage": "https://github.com/awwright/rdfa-template#readme"
 }
