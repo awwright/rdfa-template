@@ -1,3 +1,4 @@
+"use strict";
 
 if(process.argv.length < 4){
 	console.error('Usage: process.js <Template> <Data>');
@@ -22,12 +23,6 @@ var dataFilename = process.argv[3];
 var dataContents = fs.readFileSync(dataFilename, 'UTF-8');
 var dataParse = rdf.TurtleParser.parse(dataContents, baseIRI);
 var dataGraph = dataParse.graph;
-
-var rdfenv = {
-	createNamedNode: rdf.environment.createNamedNode,
-	createBlankNode: rdf.environment.createBlankNode,
-	createLiteral: rdf.environment.createLiteral,
-};
 
 console.error('Parse:');
 var result = parse(baseIRI, document);

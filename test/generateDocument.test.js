@@ -28,8 +28,8 @@ function dataFromFile(dataFilename, baseIRI){
 
 function generateTest(template, dataGraph, baseIRI, bindings){
 	if(!baseIRI) baseIRI = 'http://example.com/';
-	var template = parse(baseIRI, template);
-	var rendered = template.parser.generateDocument(template.document, dataGraph, bindings);
+	var parsed = parse(baseIRI, template);
+	var rendered = parsed.parser.generateDocument(parsed.document, dataGraph, bindings);
 	return rendered;
 }
 

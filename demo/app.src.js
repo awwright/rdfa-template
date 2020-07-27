@@ -1,8 +1,5 @@
-
-var rdfa = require('rdfa');
-var rdfat = require('rdfa-template');
-
-
+"use strict";
+/* eslint-env node, browser */
 
 var rdf = require('rdf');
 var parse = require('rdfa-template').parse;
