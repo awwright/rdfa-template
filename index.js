@@ -1,3 +1,4 @@
+"use strict";
 
 var rdf = require('rdf');
 var rdfa = require('rdfa');
@@ -24,16 +25,12 @@ DocumentGenerator.prototype.evaluate = function evaluate(db, bindings){
 	var query = self.parser.queries[0];
 	var resultset = query.evaluate(db, bindings);
 	return resultset;
-}
+};
 
 DocumentGenerator.prototype.data = function data(bindings){
 	var self = this;
 	if(!bindings) bindings = {};
 	var g = new rdf.Graph;
-	function filterValue(v){
-		if(v.termType=='Variable') return !!bindings[v];
-		return true;
-	}
 	function mapValue(v){
 		if(v.termType=='Variable'){
 			return bindings[v];
@@ -53,19 +50,19 @@ DocumentGenerator.prototype.data = function data(bindings){
 		));
 	});
 	return g;
-}
+};
 
 DocumentGenerator.prototype.fillRecordset = function fillRecordset(db, bindings){
 	var self = this;
 	return self.evaluate(db, bindings).map(function(v){
 		return self.fillSingle(db, v);
 	});
-}
+};
 
 DocumentGenerator.prototype.fillSingle = function fillSingle(db, bindings){
 	// TODO: ensure that every variable in `this.parser` has a mapping in `bindings`
 	return this.parser.generateDocument(this.document, db, bindings);
-}
+};
 
 rdfa.inherits(RDFaTemplateContext, rdfa.RDFaContext);
 function RDFaTemplateContext(){
@@ -82,7 +79,7 @@ RDFaTemplateContext.prototype.resolveReference = function resolveReference(irire
 		else throw new Error('Cannot resolve reference against variable base for '+JSON.stringify(iriref));
 	}
 	return rdfa.RDFaContext.prototype.resolveReference.apply(this, arguments);
-}
+};
 
 RDFaTemplateContext.prototype.child = function child(node){
 	var ctx = rdfa.RDFaContext.prototype.child.apply(this, arguments);
@@ -105,21 +102,21 @@ RDFaTemplateContext.prototype.child = function child(node){
 		ctx.outputPattern = this.outputPattern;
 	}
 	return ctx;
-}
+};
 
 RDFaTemplateContext.prototype.fromSafeCURIEorCURIEorIRI = function fromSafeCURIEorCURIEorIRI(str){
 	if(str.charAt(0)=='{' && str.charAt(1)=='?' && str.charAt(str.length-1)=='}'){
 		return new rdf.Variable(str.substring(2, str.length-1));
 	}
 	return rdfa.RDFaContext.prototype.fromSafeCURIEorCURIEorIRI.apply(this, arguments);
-}
+};
 
 RDFaTemplateContext.prototype.fromTERMorCURIEorAbsIRI = function fromTERMorCURIEorAbsIRI(str){
 	if(str.charAt(0)=='{' && str.charAt(1)=='?' && str.charAt(str.length-1)=='}'){
 		return new rdf.Variable(str.substring(2, str.length-1));
 	}
 	return rdfa.RDFaContext.prototype.fromTERMorCURIEorAbsIRI.apply(this, arguments);
-}
+};
 
 rdfa.inherits(RDFaTemplateParser, rdfa.RDFaParser);
 function RDFaTemplateParser(base, document){
@@ -150,8 +147,6 @@ exports.parserFrom = function RDFaTemplateParser_from(RDFaSuper){
 	return function parse(base, document, options){
 		if(typeof base!=='string') throw new Error('Expected `base` to be a string');
 		if(typeof document!=='object') throw new Error('Unexpected argument');
-		if(typeof options==='object'){
-		}
 		var parser = new RDFaTemplateParser_(base, document);
 		if(typeof options==='object'){
 			if(options.rdfenv) parser.rdfenv = options.rdfenv;
@@ -159,7 +154,7 @@ exports.parserFrom = function RDFaTemplateParser_from(RDFaSuper){
 		parser.walkDocument(document);
 		return new DocumentGenerator(document, parser);
 	};
-}
+};
 
 RDFaTemplateParser.prototype.RDFaContext = RDFaTemplateContext;
 //RDFaTemplateParser.prototype.rdfenv = {
@@ -179,7 +174,7 @@ RDFaTemplateParser.prototype.initialize = function initialize(){
 	this.stack[0].outputPattern = this.outputPattern;
 	//this.stack[0].base = new rdf.Variable('?base');
 	//this.stack[0].base = new rdf.NamedNode('http://example.com/');
-}
+};
 
 RDFaTemplateParser.prototype.getRel = function getRel(node){
 	if(node.hasAttribute('rel-bind')) return node.getAttribute('rel-bind');
@@ -224,10 +219,10 @@ RDFaTemplateParser.prototype.getHref = function getHref(node){
 
 RDFaTemplateContext.prototype.isVariable = function isVariable(str){
 	return typeof str=='string' && str[0]=='{' && str[1]=='?' && str[str.length-1]=='}';
-}
+};
 RDFaTemplateContext.prototype.getVariable = function getVariable(str){
 	return new rdf.Variable(str.substring(2, str.length-1));
-}
+};
 
 RDFaTemplateContext.prototype.getRelNode = function getRelNode(node){
 	var attr = this.parser.getRel(node);
@@ -296,7 +291,7 @@ RDFaTemplateParser.prototype.emit = function emit(s, p, o){
 		o = new rdf.Variable(value.substring(1, value.length-1));
 	}
 	ctx.outputPattern.add(new rdf.TriplePattern(s, p, o));
-}
+};
 
 RDFaTemplateParser.prototype.generateDocument = function generateDocument(template, dataGraph, initialBindings){
 	var self = this;
@@ -325,8 +320,8 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 		if(contextList[0] && node===contextList[0].node){
 			clone.rdfaTemplateContext = contextList.shift();
 		}else if(node.nodeType==node.ELEMENT_NODE){
-			console.error(node.localName);
-			console.error(contextList.map(function(e){return e.node.localName;}));
+			//console.error(node.localName);
+			//console.error(contextList.map(function(e){return e.node.localName;}));
 			throw new Error('Unknown node');
 		}
 		if(node.firstChild){
@@ -343,19 +338,13 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 		throw new Error('Could not find all contextList nodes');
 	}
 	// Now process the copy
-	var node = output;
+	node = output;
 	while(node){
 		var rdfaContext = self.stack[this.stack.length-1];
 		if(node.rdfaTemplateQuery){
 			// Make a copy of this node for every match in the result set
 			// Next iteration of the loop should skip over this entire subquery/template and go right to the next sibling/cloned node (if any)
 			var parentNode = node.parentNode;
-			if(node.firstChild){
-				defaultNext = node.firstChild;
-			}else{
-				while(node && !node.nextSibling) defaultNext = node.parentNode;
-				if(node) defaultNext = node.nextSibling;
-			}
 			// Get the result set
 			var itemTemplate = node;
 			var nextSibling = itemTemplate.nextSibling;
@@ -425,7 +414,7 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 						// TODO Use a library to produce a relative URI Reference if possible
 						var match = base.match(/^(([^:\/?#]+):)?(\/\/([^\/?#]*))?/);
 						if(match && match[0]==target.substring(0, match[0].length)){
-							node.setAttribute(attributeName, target.substring(match[0].length))
+							node.setAttribute(attributeName, target.substring(match[0].length));
 						}else{
 							node.setAttribute(attributeName, target);
 						}
@@ -478,7 +467,7 @@ RDFaTemplateParser.prototype.generateDocument = function generateDocument(templa
 		}
 	}
 	return output;
-}
+};
 
 module.exports.Query = Query;
 function Query(node, parent, order, limit, offset){
@@ -501,7 +490,7 @@ Query.prototype.add = function add(v){
 	if(v.predicate.termType=='Variable') this.variables[v.predicate] = v.predicate;
 	if(v.object.termType=='Variable') this.variables[v.object] = v.object;
 	this.statements.push(v);
-}
+};
 Query.prototype.toStringAll = function toStringAll(){
 	var str = '';
 	for(var padding='', e=this; e.parent; e=e.parent) padding+='\t';
@@ -517,7 +506,7 @@ Query.prototype.toStringAll = function toStringAll(){
 		str = '{ # Loop\n' + str + padding + '}\n';
 	}
 	return str;
-}
+};
 Query.prototype.toString = function toString(){
 	var str = '';
 	for(var q = this; q; q = q.parent){
@@ -525,16 +514,15 @@ Query.prototype.toString = function toString(){
 		str += q.statements.map(function(v){ return "\t" + v.toString() + '\n'; }).join('');
 	}
 	return 'SELECT * {\n' + str + '}\n';
-}
+};
 Query.prototype.toArray = function toArray(){
 	return this.constraints;
-}
+};
 Query.prototype.toTriplesString = function toSPARQLString(){
-	var str = '';
 	this.constraints.map(function(v){
 		return v.toTripleString();
 	}).join('');
-}
+};
 Query.prototype.evaluate = function evaluate(dataGraph, initialBindings){
 	return evaluateQuery(dataGraph, this, initialBindings);
-}
+};

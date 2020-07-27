@@ -1,3 +1,5 @@
+"use strict";
+
 var assert = require('assert');
 var fs = require('fs');
 
@@ -154,7 +156,7 @@ describe("generateDocument", function(){
 			templateFromFile('data-link-var.html'),
 			dataFromFile('data-link-standard.ttl'),
 			null,
-			{ predicate: new rdf.NamedNode('http://www.w3.org/1999/xhtml/vocab#up') }
+			{ predicate: new rdf.NamedNode('http://www.w3.org/1999/xhtml/vocab#up') },
 		);
 		var links = elements(doc.getElementsByTagName('link'));
 		assert.equal(links[0].getAttribute('rel'), 'up');
@@ -164,7 +166,7 @@ describe("generateDocument", function(){
 			templateFromFile('data-link-var.html'),
 			dataFromFile('data-link-custom.ttl'),
 			null,
-			{ predicate: new rdf.NamedNode('http://example.com/term/property') }
+			{ predicate: new rdf.NamedNode('http://example.com/term/property') },
 		);
 		var links = elements(doc.getElementsByTagName('link'));
 		assert.equal(links[0].getAttribute('rel'), 'http://example.com/term/property');

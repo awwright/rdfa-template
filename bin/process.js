@@ -27,7 +27,7 @@ var rdfenv = {
 	createNamedNode: rdf.environment.createNamedNode,
 	createBlankNode: rdf.environment.createBlankNode,
 	createLiteral: rdf.environment.createLiteral,
-}
+};
 
 console.error('Parse:');
 var result = parse(baseIRI, document);

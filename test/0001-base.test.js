@@ -1,4 +1,4 @@
-
+"use strict";
 
 var assert = require('assert');
 var fs = require('fs');
@@ -13,7 +13,6 @@ var baseIRI = 'http://example.com/';
 // TODO: load this data in a before() clause
 var templateFilename = __dirname + '/data-table.html';
 var templateContents = fs.readFileSync(templateFilename, 'UTF-8');
-var sz = new XMLSerializer;
 var document = new DOMParser().parseFromString(templateContents, 'text/xml');
 
 var dataFilename = __dirname + '/data-users-one.ttl';
