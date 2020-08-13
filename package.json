@@ -12,11 +12,11 @@
   "license": "Unlicense",
   "dependencies": {
     "rdfa": "^0.0.10",
-    "xmldom": "^0.1.27"
+    "xmldom": "^0.3.0"
   },
   "devDependencies": {
     "browserify": "^16.2.3",
-    "mocha": "^6.1.4"
+    "mocha": "^8.1.1"
   },
   "bin": {},
   "directories": {

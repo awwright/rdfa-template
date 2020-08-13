@@ -5,7 +5,6 @@ var fs = require('fs');
 
 var rdf = require('rdf');
 var parse = require('../index.js').parserFrom(require('rdfa').RDFaXMLParser);
-var XMLSerializer = require('xmldom').XMLSerializer;
 var DOMParser = require('xmldom').DOMParser;
 
 var baseIRI = 'http://example.com/';
